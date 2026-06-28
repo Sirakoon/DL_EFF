@@ -10,7 +10,7 @@ let pool = null;
 const connect = async () => {
   try {
     pool = await sql.connect(config);
-    console.log('Connected to SQL Server (Windows Authentication)');
+    console.log('Connected to SQL Server');
     return pool;
   } catch (err) {
     console.error('SQL Server connection failed:', err.message);
