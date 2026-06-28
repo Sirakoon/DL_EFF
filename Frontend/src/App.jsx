@@ -10,7 +10,7 @@ function App() {
       <Routes>
         <Route element={<LayoutPage />}>
           <Route index element={
-            <Suspense fallback={<div className="flex items-center justify-center h-64 text-gray-400">กำลังโหลด...</div>}>
+            <Suspense fallback={<div className="flex items-center justify-center h-64 text-gray-400">Loading...</div>}>
               <Dashboard />
             </Suspense>
           } />

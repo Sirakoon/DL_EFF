@@ -117,7 +117,7 @@ export default function Sidebar({ activeKey, onSelect, collapsed, onToggle }) {
         >
           <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {!collapsed && <span>ย่อเมนู</span>}
+        {!collapsed && <span>Collapse</span>}
       </button>
     </aside>
   );

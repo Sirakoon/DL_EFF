@@ -151,7 +151,7 @@ const getMachinePerformance = async (req, res, next) => {
     // Add status to each ranking row
     const rankingWithStatus = rankingResult.recordset.map((row) => ({
       ...row,
-      status: row.lossRate > 10 ? 'ปัญหา' : row.lossRate > 5 ? 'เฝ้าระวัง' : 'ปกติ',
+      status: row.lossRate > 10 ? 'Problem' : row.lossRate > 5 ? 'Watch' : 'Normal',
     }));
 
     res.json({

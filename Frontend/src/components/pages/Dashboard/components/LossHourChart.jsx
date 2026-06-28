@@ -11,7 +11,7 @@ export default function LossHourChart({ data = [] }) {
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-sm font-semibold text-gray-700">Loss Hour by Machine (Top 10)</h3>
-          <p className="text-xs text-gray-400">(ชม.)</p>
+          <p className="text-xs text-gray-400">(hrs.)</p>
         </div>
         <button className="text-gray-400 hover:text-gray-600">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -32,7 +32,7 @@ export default function LossHourChart({ data = [] }) {
             width={36}
           />
           <Tooltip
-            formatter={(v) => [`${v} ชม.`, 'Loss Hour']}
+            formatter={(v) => [`${v} hrs.`, 'Loss Hour']}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}
           />
           <Bar dataKey="lossHour" fill="#f97316" radius={[0, 4, 4, 0]} maxBarSize={14}>

@@ -2,14 +2,14 @@ import React from 'react';
 
 function StatusBadge({ status }) {
   const map = {
-    ปกติ: 'bg-green-100 text-green-700',
-    เฝ้าระวัง: 'bg-yellow-100 text-yellow-700',
-    ปัญหา: 'bg-red-100 text-red-700',
+    Normal:  'bg-green-100 text-green-700',
+    Watch:   'bg-yellow-100 text-yellow-700',
+    Problem: 'bg-red-100 text-red-700',
   };
   const dot = {
-    ปกติ: 'bg-green-500',
-    เฝ้าระวัง: 'bg-yellow-400',
-    ปัญหา: 'bg-red-500',
+    Normal:  'bg-green-500',
+    Watch:   'bg-yellow-400',
+    Problem: 'bg-red-500',
   };
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${map[status] || 'bg-gray-100 text-gray-600'}`}>
@@ -37,7 +37,7 @@ export default function MachineRankingTable({ ranking }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
-              {['#', 'Machine', 'Product Group', 'Output (ชิ้น)', 'Run Time (ชม.)', 'Loss Hour (ชม.)', 'Loss Rate (%)', 'Status'].map((h) => (
+              {['#', 'Machine', 'Product Group', 'Output (pcs)', 'Run Time (hrs)', 'Loss Hour (hrs)', 'Loss Rate (%)', 'Status'].map((h) => (
                 <th key={h} className="text-left text-xs font-semibold text-gray-500 pb-2 pr-4 whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -57,7 +57,7 @@ export default function MachineRankingTable({ ranking }) {
             ))}
             {data.length === 0 && (
               <tr>
-                <td colSpan={8} className="py-8 text-center text-gray-400 text-xs">ไม่พบข้อมูล</td>
+                <td colSpan={8} className="py-8 text-center text-gray-400 text-xs">No data found</td>
               </tr>
             )}
           </tbody>
@@ -67,10 +67,10 @@ export default function MachineRankingTable({ ranking }) {
       {/* Pagination */}
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
         <p className="text-xs text-gray-400">
-          แสดง {data.length > 0 ? (page - 1) * pageSize + 1 : 0} - {Math.min(page * pageSize, total)} จาก {total} รายการ
+          Showing {data.length > 0 ? (page - 1) * pageSize + 1 : 0} – {Math.min(page * pageSize, total)} of {total} records
         </p>
         <div className="flex items-center gap-1">
-          <PageBtn disabled={page <= 1} label="ก่อนหน้า" />
+          <PageBtn disabled={page <= 1} label="Previous" />
           {Array.from({ length: Math.min(totalPages, 6) }, (_, i) => i + 1).map((p) => (
             <span
               key={p}
@@ -82,7 +82,7 @@ export default function MachineRankingTable({ ranking }) {
             </span>
           ))}
           {totalPages > 6 && <span className="text-gray-400 text-xs px-1">...</span>}
-          <PageBtn disabled={page >= totalPages} label="ถัดไป" />
+          <PageBtn disabled={page >= totalPages} label="Next" />
         </div>
       </div>
     </div>

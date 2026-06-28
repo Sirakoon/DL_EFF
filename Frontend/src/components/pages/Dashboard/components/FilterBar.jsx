@@ -1,6 +1,6 @@
 import React from 'react';
 
-function FilterSelect({ label, icon, value, onChange, options, allLabel = 'ทั้งหมด' }) {
+function FilterSelect({ label, icon, value, onChange, options, allLabel = 'All' }) {
   return (
     <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 min-w-[170px]">
       <span className="text-gray-400 flex-shrink-0">{icon}</span>
@@ -54,7 +54,7 @@ export default function FilterBar({ filters, onChange, options }) {
       <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2">
         <span className="text-gray-400">{CalIcon}</span>
         <div>
-          <p className="text-[10px] text-gray-400 leading-none">ช่วงวันที่</p>
+          <p className="text-[10px] text-gray-400 leading-none">Date Range</p>
           <div className="flex items-center gap-1 mt-0.5">
             <input
               type="date"
@@ -103,7 +103,7 @@ export default function FilterBar({ filters, onChange, options }) {
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
           <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        รีเช็ตตัวกรอง
+        Reset Filters
       </button>
     </div>
   );

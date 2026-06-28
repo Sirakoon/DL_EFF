@@ -55,7 +55,7 @@ export default function Dashboard() {
       {/* Error */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
-          ไม่สามารถโหลดข้อมูลได้: {error}
+          Failed to load data: {error}
         </div>
       )}
 
@@ -68,39 +68,39 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
           <KPICard
             icon={MachineIcon}
-            label="จำนวนเครื่องจักร"
+            label="Total Machines"
             value={data.kpi.machineCount.toLocaleString()}
-            unit="เครื่อง"
+            unit="machines"
             change={4.0}
-            changeLabel="เทียบกับสัปดาห์ก่อน"
+            changeLabel="vs last week"
           />
           <KPICard
             icon={ClockIcon}
-            label="Run Time รวม"
+            label="Total Run Time"
             value={data.kpi.totalRunTime.toLocaleString()}
-            unit="ชม."
+            unit="hrs."
             change={8.3}
-            changeLabel="เทียบกับสัปดาห์ก่อน"
+            changeLabel="vs last week"
           />
           <KPICard
             icon={WarnIcon}
-            label="Loss Hour รวม"
+            label="Total Loss Hour"
             value={data.kpi.totalLossHour.toLocaleString()}
-            unit="ชม."
+            unit="hrs."
             change={15.7}
-            changeLabel="เทียบกับสัปดาห์ก่อน"
+            changeLabel="vs last week"
           />
           <KPICard
             icon={SpeedIcon}
             label="Avg Output / Hr"
             value={data.kpi.avgOutputPerHr.toLocaleString()}
-            unit="ชิ้น/ชม."
+            unit="pcs/hr."
             change={3.6}
-            changeLabel="เทียบกับสัปดาห์ก่อน"
+            changeLabel="vs last week"
           />
           <KPICard
             icon={AlertIcon}
-            label="เครื่องที่มีปัญหาสูงสุด"
+            label="Highest Loss Machine"
             value={data.kpi.highestLossMachine}
             unit=""
             highlight={`${data.kpi.highestLossRate}%`}

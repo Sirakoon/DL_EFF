@@ -2,12 +2,12 @@ import React from 'react';
 
 export default function Header({ title, subtitle }) {
   const now = new Date();
-  const dateStr = now.toLocaleDateString('th-TH', {
+  const dateStr = now.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   });
-  const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+  const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
   return (
     <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 sticky top-0 z-10">
@@ -38,7 +38,7 @@ export default function Header({ title, subtitle }) {
               <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
             </svg>
           </div>
-          <span>ผู้ใช้งาน</span>
+          <span>User</span>
           <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

@@ -9,7 +9,7 @@ export default function OutputHrChart({ data = [] }) {
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-sm font-semibold text-gray-700">Output / Hr by Machine</h3>
-          <p className="text-xs text-gray-400">(ชิ้น/ชม.)</p>
+          <p className="text-xs text-gray-400">(pcs/hr.)</p>
         </div>
         <button className="text-gray-400 hover:text-gray-600">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -23,7 +23,7 @@ export default function OutputHrChart({ data = [] }) {
           <XAxis dataKey="MACHINE" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
           <Tooltip
-            formatter={(v) => [`${v.toLocaleString()} ชิ้น/ชม.`, 'Output/Hr']}
+            formatter={(v) => [`${v.toLocaleString()} pcs/hr.`, 'Output/Hr']}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}
           />
           <Bar dataKey="outputPerHr" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40}>

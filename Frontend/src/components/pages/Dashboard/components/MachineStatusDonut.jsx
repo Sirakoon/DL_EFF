@@ -8,9 +8,9 @@ export default function MachineStatusDonut({ data }) {
   const { total, normal, watch, problem } = data;
 
   const pieData = [
-    { name: 'ปกติ', value: normal, color: COLORS.normal },
-    { name: 'เฝ้าระวัง', value: watch, color: COLORS.watch },
-    { name: 'ปัญหา', value: problem, color: COLORS.problem },
+    { name: 'Normal', value: normal, color: COLORS.normal },
+    { name: 'Watch',  value: watch,  color: COLORS.watch },
+    { name: 'Problem', value: problem, color: COLORS.problem },
   ].filter((d) => d.value > 0);
 
   const pct = (v) => (total > 0 ? ((v / total) * 100).toFixed(1) : '0.0');
@@ -44,26 +44,26 @@ export default function MachineStatusDonut({ data }) {
                   <Cell key={entry.name} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip formatter={(v, n) => [`${v} เครื่อง`, n]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+              <Tooltip formatter={(v, n) => [`${v} machines`, n]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
             </PieChart>
           </ResponsiveContainer>
           {/* Center label */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <span className="text-xl font-bold text-gray-800">{total}</span>
-            <span className="text-xs text-gray-400">เครื่อง</span>
+            <span className="text-xs text-gray-400">machines</span>
           </div>
         </div>
         {/* Legend */}
         <div className="flex flex-col gap-3">
           {[
-            { label: 'ปกติ', value: normal, color: COLORS.normal },
-            { label: 'เฝ้าระวัง', value: watch, color: COLORS.watch },
-            { label: 'ปัญหา', value: problem, color: COLORS.problem },
+            { label: 'Normal',  value: normal,  color: COLORS.normal },
+            { label: 'Watch',   value: watch,   color: COLORS.watch },
+            { label: 'Problem', value: problem, color: COLORS.problem },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
               <span className="text-sm text-gray-600 w-20">{item.label}</span>
-              <span className="text-sm font-semibold text-gray-800">{item.value} เครื่อง</span>
+              <span className="text-sm font-semibold text-gray-800">{item.value} machines</span>
               <span className="text-xs text-gray-400">{pct(item.value)}%</span>
             </div>
           ))}
@@ -74,7 +74,7 @@ export default function MachineStatusDonut({ data }) {
           <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-          เครื่องที่มีปัญหา {problem} เครื่อง ต้องการการตรวจสอบเร่งด่วน
+          {problem} machine{problem > 1 ? 's' : ''} with problems — immediate inspection required
         </div>
       )}
     </div>

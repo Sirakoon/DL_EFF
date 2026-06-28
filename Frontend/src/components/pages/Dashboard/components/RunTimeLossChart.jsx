@@ -25,7 +25,7 @@ export default function RunTimeLossChart({ data = [] }) {
             tick={{ fontSize: 11, fill: '#9ca3af' }}
             axisLine={false}
             tickLine={false}
-            label={{ value: 'Run Time (ชม.)', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af', dx: -4 }}
+            label={{ value: 'Run Time (hrs.)', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af', dx: -4 }}
           />
           <YAxis
             yAxisId="right"
@@ -33,12 +33,12 @@ export default function RunTimeLossChart({ data = [] }) {
             tick={{ fontSize: 11, fill: '#9ca3af' }}
             axisLine={false}
             tickLine={false}
-            label={{ value: 'Loss Hour (ชม.)', angle: 90, position: 'insideRight', fontSize: 10, fill: '#9ca3af', dx: 4 }}
+            label={{ value: 'Loss Hour (hrs.)', angle: 90, position: 'insideRight', fontSize: 10, fill: '#9ca3af', dx: 4 }}
           />
           <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Bar yAxisId="left" dataKey="runTime" name="Run Time (ชม.)" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={28} />
-          <Bar yAxisId="left" dataKey="lossHour" name="Loss Hour (ชม.)" fill="#f97316" radius={[4, 4, 0, 0]} maxBarSize={28} />
+          <Bar yAxisId="left" dataKey="runTime" name="Run Time (hrs.)" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={28} />
+          <Bar yAxisId="left" dataKey="lossHour" name="Loss Hour (hrs.)" fill="#f97316" radius={[4, 4, 0, 0]} maxBarSize={28} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>
