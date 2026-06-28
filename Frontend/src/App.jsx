@@ -1,18 +1,19 @@
-import { lazy, useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router";
-import LayoutPage from "./components/shared/LayoutPage";
-import Dashborad from "./components/pages/DashBorad";
+import { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router';
+import LayoutPage from './components/shared/LayoutPage';
 
-const DashBorad = lazy(() => import("./components/pages/DashBorad"));
+const Dashboard = lazy(() => import('./components/pages/Dashboard/index'));
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<LayoutPage />}>
-          <Route index element={<Dashborad />} />
+          <Route index element={
+            <Suspense fallback={<div className="flex items-center justify-center h-64 text-gray-400">กำลังโหลด...</div>}>
+              <Dashboard />
+            </Suspense>
+          } />
         </Route>
       </Routes>
     </BrowserRouter>
