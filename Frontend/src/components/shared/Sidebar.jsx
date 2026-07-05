@@ -48,8 +48,8 @@ export default function Sidebar({ activeKey, onSelect, collapsed, onToggle }) {
                   onClick={() => onSelect(item.key)}
                   title={collapsed ? item.label : undefined}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${active
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                      : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
+                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
                     }`}
                 >
                   <span className={`flex-shrink-0 ${active ? 'text-white' : 'text-gray-400'}`}>

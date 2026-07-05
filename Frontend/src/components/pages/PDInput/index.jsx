@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   HiPlus, HiMagnifyingGlass, HiPencilSquare, HiTrash,
   HiChevronLeft, HiChevronRight, HiArrowPath,
-  HiCheckCircle, HiXCircle, HiFunnel,
+  HiCheckCircle, HiXCircle, HiFunnel, HiArrowDownTray,
 } from 'react-icons/hi2';
 import { TbLoader2, TbDatabaseOff } from 'react-icons/tb';
 import { MdToday } from 'react-icons/md';
-import { getPdInputList, getPdInputFilters } from '../../../services/api';
+import { getPdInputList, getPdInputFilters, exportPdInputCsv } from '../../../services/api';
+import { toast } from '../../../lib/toast';
 import PDInputModal from './components/PDInputModal';
 import DeleteConfirm from './components/DeleteConfirm';
 
@@ -14,8 +15,8 @@ const PAGE_SIZE = 100;
 
 const today = () => new Date().toISOString().slice(0, 10);
 const daysAgo = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const fmt = (iso) => { if (!iso) return '—'; const [y,m,d] = iso.slice(0,10).split('-'); return `${d} ${MONTHS[+m-1]} ${y}`; };
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const fmt = (iso) => { if (!iso) return '—'; const [y, m, d] = iso.slice(0, 10).split('-'); return `${d} ${MONTHS[+m - 1]} ${y}`; };
 const num = (v, d = 2) => v != null ? Number(v).toLocaleString('en', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—';
 
 /* ── DL Eff badge ── */
@@ -54,6 +55,9 @@ export default function PDInputPage() {
 
   const [modal, setModal] = useState(null); // null | { mode:'create'|'edit', data? }
   const [delRow, setDelRow] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const timerRef = useRef(null);
 
   /* load filter options once */
   useEffect(() => {
@@ -63,12 +67,19 @@ export default function PDInputPage() {
   const fetch = useCallback(() => {
     setLoading(true);
     getPdInputList({ dateFrom, dateTo, shift, productGroup, productCode, page, pageSize: PAGE_SIZE })
-      .then((res) => { setData(res.data); setTotal(res.total); })
-      .catch(() => { })
+      .then((res) => { setData(res.data); setTotal(res.total); setLastUpdated(new Date()); })
+      .catch((e) => toast.error(`Failed to load records: ${e.message}`))
       .finally(() => setLoading(false));
   }, [dateFrom, dateTo, shift, productGroup, productCode, page]);
 
   useEffect(() => { fetch(); }, [fetch]);
+
+  /* 30-second auto-refresh */
+  useEffect(() => {
+    if (!autoRefresh) { clearInterval(timerRef.current); return; }
+    timerRef.current = setInterval(fetch, 30_000);
+    return () => clearInterval(timerRef.current);
+  }, [autoRefresh, fetch]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -86,6 +97,11 @@ export default function PDInputPage() {
   const isFiltered = dateFrom !== daysAgo(7) || dateTo !== today() || shift || productGroup || productCode;
 
   const handleSaved = () => { setModal(null); setDelRow(null); fetch(); };
+
+  const handleExport = () => {
+    exportPdInputCsv({ dateFrom, dateTo, shift, productGroup, productCode })
+      .catch((e) => toast.error(`Export failed: ${e.message}`));
+  };
 
   return (
     <div className="space-y-5 pb-10">
@@ -144,18 +160,22 @@ export default function PDInputPage() {
           <button
             onClick={handleClear}
             disabled={!isFiltered}
-            className={`h-10 flex items-center gap-2 px-4 text-sm font-bold rounded-xl border-2 transition-all ${
-              isFiltered
-                ? 'border-gray-300 text-gray-500 hover:border-red-300 hover:text-red-500 hover:bg-red-50'
-                : 'border-gray-100 text-gray-300 cursor-not-allowed'
-            }`}
+            className={`h-10 flex items-center gap-2 px-4 text-sm font-bold rounded-xl border-2 transition-all ${isFiltered
+              ? 'border-gray-300 text-gray-500 hover:border-red-300 hover:text-red-500 hover:bg-red-50'
+              : 'border-gray-100 text-gray-300 cursor-not-allowed'
+              }`}
           >
             <HiFunnel className="text-base" />
             Clear
           </button>
 
-          {/* Add button (push to right) */}
-          <div className="ml-auto">
+          {/* Export + Add (push to right) */}
+          <div className="ml-auto flex items-center gap-2">
+            <button onClick={handleExport}
+              className="h-10 flex items-center gap-2 px-4 text-sm font-bold text-gray-600 bg-white border-2 border-gray-200 rounded-xl hover:border-green-400 hover:text-green-600 hover:bg-green-50 transition">
+              <HiArrowDownTray className="text-base" />
+              Export CSV
+            </button>
             <button onClick={() => setModal({ mode: 'create' })}
               className="h-10 flex items-center gap-2 px-6 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-md shadow-emerald-200">
               <HiPlus className="text-lg" />
@@ -176,11 +196,22 @@ export default function PDInputPage() {
             <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full ml-1">
               {total.toLocaleString()} records
             </span>
+            {lastUpdated && (
+              <span className="text-[10px] text-gray-300 ml-2">
+                Updated {lastUpdated.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+            )}
           </div>
-          <button onClick={fetch} disabled={loading}
-            className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition">
-            <HiArrowPath className={loading ? 'animate-spin' : ''} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setAutoRefresh((v) => !v)}
+              className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition ${autoRefresh ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+              {autoRefresh ? '⟳ Auto' : 'Auto off'}
+            </button>
+            <button onClick={fetch} disabled={loading}
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition">
+              <HiArrowPath className={loading ? 'animate-spin' : ''} />
+            </button>
+          </div>
         </div>
 
         {/* table */}
@@ -199,7 +230,7 @@ export default function PDInputPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50/80 border-b border-gray-200">
                 <tr>
-                  <Th>#</Th>
+                  <Th>No</Th>
                   <Th>Date</Th>
                   <Th>Shift</Th>
                   <Th>Machine</Th>

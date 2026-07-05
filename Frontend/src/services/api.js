@@ -39,3 +39,19 @@ export const getMasterShifts = () => fetchJSON('/pd-input/master/shifts');
 export const createPdInput = (body) => fetchJSON('/pd-input', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 export const updatePdInput = (id, body) => fetchJSON(`/pd-input/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 export const deletePdInput = (id) => fetchJSON(`/pd-input/${id}`, { method: 'DELETE' });
+
+/* ── PD Input — Export CSV (triggers browser download) ──────────── */
+export const exportPdInputCsv = async (params = {}) => {
+  const res = await fetch(`${BASE_URL}/pd-input/export${qs(params)}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `Export ${res.status}`);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pd_records_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};

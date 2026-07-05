@@ -1,6 +1,7 @@
 import React, { useState, Suspense, lazy } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import { ToastContainer } from './Toast';
 
 const DlEffDashboard = lazy(() => import('../pages/DlEff/index'));
 const PDInputPage = lazy(() => import('../pages/PDInput/index'));
@@ -20,6 +21,7 @@ export default function LayoutPage() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <ToastContainer />
       <Sidebar
         activeKey={activeKey}
         onSelect={setActiveKey}

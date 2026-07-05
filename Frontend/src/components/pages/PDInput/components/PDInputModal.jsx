@@ -5,6 +5,7 @@ import {
   getMasterMachines, getMasterProducts, getMasterShifts,
   createPdInput, updatePdInput,
 } from '../../../../services/api';
+import { toast } from '../../../../lib/toast';
 
 const EMPTY = {
   production_date: new Date().toISOString().slice(0, 10), shift_code: '', machine_code: '', product_group: '',
@@ -34,8 +35,8 @@ function Field({ label, required, hint, error, children }) {
 
 const inputBase = 'w-full h-10 border rounded-xl px-3 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400';
 const inputNormal = `${inputBase} bg-white text-gray-800 border-gray-200 hover:border-gray-300`;
-const inputError  = `${inputBase} bg-white text-gray-800 border-red-300 ring-2 ring-red-200`;
-const inputRO     = `${inputBase} bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed select-none`;
+const inputError = `${inputBase} bg-white text-gray-800 border-red-300 ring-2 ring-red-200`;
+const inputRO = `${inputBase} bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed select-none`;
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -74,10 +75,10 @@ function AutoTag({ label, value }) {
 
 function SectionHead({ n, label, color }) {
   const scheme = {
-    blue:    'bg-blue-600 text-blue-700 border-blue-100',
-    teal:    'bg-teal-600 text-teal-700 border-teal-100',
+    blue: 'bg-blue-600 text-blue-700 border-blue-100',
+    teal: 'bg-teal-600 text-teal-700 border-teal-100',
     emerald: 'bg-emerald-600 text-emerald-700 border-emerald-100',
-    amber:   'bg-amber-500 text-amber-700 border-amber-100',
+    amber: 'bg-amber-500 text-amber-700 border-amber-100',
   }[color];
   const [bg, txt, bdr] = scheme.split(' ');
   return (
@@ -101,39 +102,39 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
   const [errors, setErrors] = useState({});
 
   const selectedMachine = machines.find((m) => m.machine_code === form.machine_code);
-  const selectedProduct  = products.find((p) => p.product_code  === form.product_code);
+  const selectedProduct = products.find((p) => p.product_code === form.product_code);
 
   const productGroups = useMemo(() =>
     [...new Set(products.map((p) => p.product_group_name))].sort()
-  , [products]);
+    , [products]);
 
   const filteredProducts = useMemo(() =>
     form.product_group ? products.filter((p) => p.product_group_name === form.product_group) : []
-  , [products, form.product_group]);
+    , [products, form.product_group]);
 
   useEffect(() => {
     Promise.all([getMasterMachines(), getMasterProducts(), getMasterShifts()])
       .then(([m, p, s]) => { setMachines(m.data ?? []); setProducts(p.data ?? []); setShifts(s.data ?? []); })
-      .catch(() => {})
+      .catch((e) => toast.error(`Failed to load master data: ${e.message}`))
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (isEdit && initialData && !loading) {
       setForm({
-        production_date:  initialData.production_date?.slice(0, 10) ?? '',
-        shift_code:       initialData.shift_code       ?? '',
-        machine_code:     initialData.machine_code     ?? '',
-        product_group:    initialData.product_group_name ?? '',
-        product_code:     initialData.product_code     ?? '',
+        production_date: initialData.production_date?.slice(0, 10) ?? '',
+        shift_code: initialData.shift_code ?? '',
+        machine_code: initialData.machine_code ?? '',
+        product_group: initialData.product_group_name ?? '',
+        product_code: initialData.product_code ?? '',
         machine_run_time: initialData.machine_run_time ?? '',
-        std_hc:           initialData.std_hc           ?? '',
-        std_hour:         initialData.std_hour         ?? '',
-        hour_piece_rate:  initialData.hour_piece_rate  ?? '',
-        actual_output:    initialData.actual_output    ?? '',
-        loss_hour:        initialData.loss_hour        ?? '',
-        actual_hc:        initialData.actual_hc        ?? '',
-        actual_bulk_hr:   initialData.actual_bulk_hr   ?? '0',
+        std_hc: initialData.std_hc ?? '',
+        std_hour: initialData.std_hour ?? '',
+        hour_piece_rate: initialData.hour_piece_rate ?? '',
+        actual_output: initialData.actual_output ?? '',
+        loss_hour: initialData.loss_hour ?? '',
+        actual_hc: initialData.actual_hc ?? '',
+        actual_bulk_hr: initialData.actual_bulk_hr ?? '0',
         actual_pallet_hr: initialData.actual_pallet_hr ?? '0',
         actual_assist_hr: initialData.actual_assist_hr ?? '0',
       });
@@ -145,8 +146,8 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
 
   const validate = () => {
     const e = {};
-    ['production_date','shift_code','machine_code','product_group','product_code',
-     'machine_run_time','std_hc','std_hour','hour_piece_rate','actual_output','actual_hc','loss_hour']
+    ['production_date', 'shift_code', 'machine_code', 'product_group', 'product_code',
+      'machine_run_time', 'std_hc', 'std_hour', 'hour_piece_rate', 'actual_output', 'actual_hc', 'loss_hour']
       .forEach((k) => { if (form[k] === '' || form[k] == null) e[k] = 'Required'; });
     const rng = (k, lo, hi) => { const n = Number(form[k]); if (form[k] !== '' && (n < lo || n > hi)) e[k] = `${lo}–${hi}`; };
     rng('machine_run_time', 0, 24); rng('std_hc', 0, 25); rng('std_hour', 0, 99);
@@ -164,8 +165,10 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
       delete payload.product_group;
       if (isEdit) await updatePdInput(initialData.record_id, payload);
       else await createPdInput(payload);
+      toast.success(isEdit ? 'Record updated successfully' : 'Record created successfully');
       onSaved();
     } catch (err) {
+      toast.error(err.message);
       setErrors({ _server: err.message });
     } finally {
       setSaving(false);
@@ -215,7 +218,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                   <Field label="Shift" required error={errors.shift_code}>
                     <TSelect value={form.shift_code} onChange={set('shift_code')} hasError={!!errors.shift_code}>
                       <option value="">Select Shift</option>
-                      {shifts.map((s) => <option key={s.shift_code} value={s.shift_code}>{s.shift_code} — {s.shift_name}</option>)}
+                      {shifts.map((s) => <option key={s.shift_code} value={s.shift_code}>{s.shift_code}</option>)}
                     </TSelect>
                   </Field>
                   {/* row 2 */}

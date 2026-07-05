@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   HiCalendar, HiCalendarDays, HiChartBar, HiMagnifyingGlass,
   HiCheckCircle, HiXCircle, HiXMark, HiExclamationTriangle,
@@ -8,6 +8,7 @@ import { MdToday, MdDateRange } from 'react-icons/md';
 import { BiSolidFactory } from 'react-icons/bi';
 import DlEffDetailTable from './components/DlEffDetailTable';
 import { getDlEffOverview, getDlEffDetail } from '../../../services/api';
+import { toast } from '../../../lib/toast';
 
 /* ─── constants ──────────────────────────────────────────────────── */
 const PERIODS = [
@@ -316,6 +317,9 @@ export default function DlEffDashboard() {
   const [overview, setOverview] = useState([]);
   const [loadingOverview, setLoadingOverview] = useState(false);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const timerRef = useRef(null);
 
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState({ data: [], topReasons: [] });
@@ -348,12 +352,18 @@ export default function DlEffDashboard() {
     setLoadingOverview(true);
     setError(null);
     getDlEffOverview(buildParams())
-      .then((res) => setOverview(res.data ?? []))
-      .catch((e) => setError(e.message))
+      .then((res) => { setOverview(res.data ?? []); setLastUpdated(new Date()); })
+      .catch((e) => { setError(e.message); toast.error(`DL Eff load failed: ${e.message}`); })
       .finally(() => setLoadingOverview(false));
   }, [buildParams]);
 
   useEffect(() => { fetchOverview(); }, [fetchOverview]);
+
+  useEffect(() => {
+    if (!autoRefresh) { clearInterval(timerRef.current); return; }
+    timerRef.current = setInterval(fetchOverview, 30_000);
+    return () => clearInterval(timerRef.current);
+  }, [autoRefresh, fetchOverview]);
 
   useEffect(() => {
     if (!selected) return;
@@ -470,9 +480,22 @@ export default function DlEffDashboard() {
             Clear
           </button>
 
+          {/* auto-refresh toggle + last updated */}
+          <div className="flex items-center gap-2 ml-auto">
+            {lastUpdated && (
+              <span className="text-[10px] text-gray-300">
+                Updated {lastUpdated.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+            )}
+            <button onClick={() => setAutoRefresh((v) => !v)}
+              className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition ${autoRefresh ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+              {autoRefresh ? '⟳ Auto' : 'Auto off'}
+            </button>
+          </div>
+
           {/* summary pills */}
           {!loadingOverview && (metCount > 0 || missCount > 0) && (
-            <div className="flex gap-2 ml-auto flex-wrap">
+            <div className="flex gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-bold px-3 py-2 rounded-full">
                 <HiArrowTrendingUp className="text-green-500" />
                 {metCount} group{metCount !== 1 ? 's' : ''} on target

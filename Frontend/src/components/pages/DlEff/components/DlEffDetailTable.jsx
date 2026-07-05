@@ -109,7 +109,7 @@ export default function DlEffDetailTable({ data, loading, target }) {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-200">
-                <Th>#</Th>
+                <Th>No</Th>
                 <Th>Date</Th>
                 <Th>Shift</Th>
                 <Th>Machine</Th>

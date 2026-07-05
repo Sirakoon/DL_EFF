@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { HiExclamationTriangle, HiTrash } from 'react-icons/hi2';
 import { TbLoader2 } from 'react-icons/tb';
 import { deletePdInput } from '../../../../services/api';
+import { toast } from '../../../../lib/toast';
 
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const fmtDate = (iso) => { if (!iso) return '—'; const [y,m,d] = iso.slice(0,10).split('-'); return `${d} ${MONTHS[+m-1]} ${y}`; };
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const fmtDate = (iso) => { if (!iso) return '—'; const [y, m, d] = iso.slice(0, 10).split('-'); return `${d} ${MONTHS[+m - 1]} ${y}`; };
 
 export default function DeleteConfirm({ record, onClose, onDeleted }) {
   const [loading, setLoading] = useState(false);
@@ -14,8 +15,10 @@ export default function DeleteConfirm({ record, onClose, onDeleted }) {
     setLoading(true);
     try {
       await deletePdInput(record.record_id);
+      toast.success('Record deleted');
       onDeleted();
     } catch (e) {
+      toast.error(e.message);
       setError(e.message);
       setLoading(false);
     }

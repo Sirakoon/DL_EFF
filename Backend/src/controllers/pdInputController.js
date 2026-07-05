@@ -17,6 +17,40 @@
 
 const { sql, getPool } = require('../config/db');
 
+/* ── server-side validation ─────────────────────────────────────── */
+function validateBody(body) {
+  const errors = [];
+  const REQUIRED = [
+    'production_date','shift_code','machine_code','product_code',
+    'machine_run_time','std_hc','std_hour','hour_piece_rate',
+    'actual_output','actual_hc','loss_hour',
+  ];
+  REQUIRED.forEach((k) => {
+    if (body[k] == null || body[k] === '') errors.push(`${k} is required`);
+  });
+  const today = new Date().toISOString().slice(0, 10);
+  if (body.production_date && body.production_date > today)
+    errors.push('production_date cannot be in the future');
+  if (body.shift_code && !['A','B','C'].includes(body.shift_code))
+    errors.push('shift_code must be A, B, or C');
+  const rng = (k, lo, hi) => {
+    const v = Number(body[k]);
+    if (body[k] != null && body[k] !== '' && (isNaN(v) || v < lo || v > hi))
+      errors.push(`${k} must be ${lo}–${hi}`);
+  };
+  rng('machine_run_time', 0, 24);
+  rng('std_hc', 0, 25);
+  rng('std_hour', 0, 99);
+  rng('hour_piece_rate', 0, 99999);
+  rng('actual_output', 0, 9999999999);
+  rng('actual_hc', 0, 25);
+  rng('loss_hour', 0, 13);
+  rng('actual_bulk_hr', 0, 13);
+  rng('actual_pallet_hr', 0, 13);
+  rng('actual_assist_hr', 0, 13);
+  return errors;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    GET /api/pd-input
    ─────────────────────────────────────────────────────────────────
@@ -203,6 +237,9 @@ const getFilters = async (req, res, next) => {
 ═══════════════════════════════════════════════════════════════════ */
 const create = async (req, res, next) => {
   try {
+    const errs = validateBody(req.body);
+    if (errs.length) return res.status(400).json({ error: errs.join('; ') });
+
     const {
       production_date, shift_code, machine_code, product_code,
       machine_run_time, std_hc, std_hour, hour_piece_rate,
@@ -262,6 +299,9 @@ const create = async (req, res, next) => {
 ═══════════════════════════════════════════════════════════════════ */
 const update = async (req, res, next) => {
   try {
+    const errs = validateBody(req.body);
+    if (errs.length) return res.status(400).json({ error: errs.join('; ') });
+
     const { id } = req.params;
     const {
       production_date, shift_code, machine_run_time, std_hc, std_hour,
@@ -347,4 +387,54 @@ const remove = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { getAll, getMachines, getProducts, getShifts, getFilters, create, update, remove };
+/* ═══════════════════════════════════════════════════════════════════
+   GET /api/pd-input/export   → CSV download (all filtered rows, no pagination)
+═══════════════════════════════════════════════════════════════════ */
+const exportCsv = async (req, res, next) => {
+  try {
+    const { dateFrom, dateTo, shift, productGroup, productCode } = req.query;
+    const conditions = [];
+    const pool = getPool();
+    const request = pool.request();
+
+    if (dateFrom) { conditions.push('production_date >= @dateFrom'); request.input('dateFrom', sql.Date, dateFrom); }
+    if (dateTo)   { conditions.push('production_date <= @dateTo');   request.input('dateTo',   sql.Date, dateTo);   }
+    if (shift)    { conditions.push('shift_code = @shift');          request.input('shift',    sql.Char(1), shift); }
+    if (productGroup) { conditions.push('product_group_name = @productGroup'); request.input('productGroup', sql.VarChar(50), productGroup); }
+    if (productCode)  { conditions.push('product_code = @productCode');        request.input('productCode',  sql.VarChar(30), productCode);  }
+
+    const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+    const result = await request.query(`
+      SELECT
+        record_id, production_date, shift_code, machine_code,
+        product_group_name, product_code, product_description,
+        mc_speed_pcs_hr, oee_target,
+        machine_run_time, std_hc, std_hour, hour_piece_rate,
+        actual_output, loss_hour, actual_bulk_hr, actual_pallet_hr, actual_assist_hr, actual_hc,
+        cal_output_at_oee, std_output,
+        productivity_std_pcs_mh, actual_hour, productivity_ac_pcs_mh,
+        ROUND(dl_eff_percent, 2) AS dl_eff_percent,
+        entry_datetime
+      FROM vw_oee_productivity
+      ${where}
+      ORDER BY production_date DESC, record_id DESC
+    `);
+
+    const rows = result.recordset;
+    if (!rows.length) return res.status(404).json({ error: 'No data to export' });
+
+    const headers = Object.keys(rows[0]);
+    const escape = (v) => {
+      if (v == null) return '';
+      const s = String(v);
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers.join(','), ...rows.map((r) => headers.map((h) => escape(r[h])).join(','))].join('\r\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="pd_records_${new Date().toISOString().slice(0,10)}.csv"`);
+    res.send('﻿' + csv); // BOM for Excel UTF-8 compat
+  } catch (err) { next(err); }
+};
+
+module.exports = { getAll, getMachines, getProducts, getShifts, getFilters, create, update, remove, exportCsv };

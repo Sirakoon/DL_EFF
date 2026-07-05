@@ -1,36 +1,17 @@
 const { sql, getPool } = require('../config/db');
 
-// Build WHERE clause from query params
 function buildWhere(req) {
   const { dateFrom, dateTo, machine, shift, productGroup } = req.query;
   const conditions = [];
   const inputs = [];
 
-  if (dateFrom) {
-    conditions.push('PRODUCTION_DATE >= @dateFrom');
-    inputs.push({ name: 'dateFrom', type: sql.DateTime2, value: dateFrom });
-  }
-  if (dateTo) {
-    conditions.push('PRODUCTION_DATE <= @dateTo');
-    inputs.push({ name: 'dateTo', type: sql.DateTime2, value: dateTo });
-  }
-  if (machine && machine !== 'ทั้งหมด') {
-    conditions.push('MACHINE = @machine');
-    inputs.push({ name: 'machine', type: sql.VarChar(100), value: machine });
-  }
-  if (shift && shift !== 'ทั้งหมด') {
-    conditions.push('SHIFT = @shift');
-    inputs.push({ name: 'shift', type: sql.VarChar(10), value: shift });
-  }
-  if (productGroup && productGroup !== 'ทั้งหมด') {
-    conditions.push('PRODUCT_GROUP = @productGroup');
-    inputs.push({ name: 'productGroup', type: sql.VarChar(150), value: productGroup });
-  }
+  if (dateFrom) { conditions.push('production_date >= @dateFrom'); inputs.push({ name: 'dateFrom', type: sql.Date, value: dateFrom }); }
+  if (dateTo)   { conditions.push('production_date <= @dateTo');   inputs.push({ name: 'dateTo',   type: sql.Date, value: dateTo });   }
+  if (machine)  { conditions.push('machine_code = @machine');      inputs.push({ name: 'machine',  type: sql.VarChar(30), value: machine }); }
+  if (shift)    { conditions.push('shift_code = @shift');          inputs.push({ name: 'shift',    type: sql.Char(1),    value: shift });    }
+  if (productGroup) { conditions.push('product_group_name = @productGroup'); inputs.push({ name: 'productGroup', type: sql.VarChar(50), value: productGroup }); }
 
-  return {
-    where: conditions.length ? 'WHERE ' + conditions.join(' AND ') : '',
-    inputs,
-  };
+  return { where: conditions.length ? 'WHERE ' + conditions.join(' AND ') : '', inputs };
 }
 
 function applyInputs(request, inputs) {
@@ -43,112 +24,91 @@ const getMachinePerformance = async (req, res, next) => {
   try {
     const pool = getPool();
     const { where, inputs } = buildWhere(req);
+    const VIEW = 'vw_oee_productivity';
 
-    // KPI Summary
     const kpiResult = await applyInputs(pool.request(), inputs).query(`
       SELECT
-        COUNT(DISTINCT MACHINE)          AS machineCount,
-        SUM(MC_RUN_TIME) / 60.0          AS totalRunTime,
-        SUM(LOSS_HOUR)                   AS totalLossHour,
-        SUM(ACTUAL_OUTPUT) / NULLIF(SUM(MC_RUN_TIME) / 60.0, 0) AS avgOutputPerHr
-      FROM RawDataTest
-      ${where}
+        COUNT(DISTINCT machine_code)                                          AS machineCount,
+        SUM(machine_run_time)                                                 AS totalRunTime,
+        SUM(loss_hour)                                                        AS totalLossHour,
+        SUM(CAST(actual_output AS FLOAT)) / NULLIF(SUM(actual_hour), 0)      AS avgOutputPerHr
+      FROM ${VIEW} ${where}
     `);
     const kpi = kpiResult.recordset[0];
 
-    // Machine with highest loss rate
     const highLossResult = await applyInputs(pool.request(), inputs).query(`
       SELECT TOP 1
-        MACHINE,
-        SUM(LOSS_HOUR) / NULLIF(SUM(MC_RUN_TIME) / 60.0, 0) * 100 AS lossRate
-      FROM RawDataTest
-      ${where}
-      GROUP BY MACHINE
+        machine_code AS MACHINE,
+        SUM(loss_hour) / NULLIF(SUM(machine_run_time), 0) * 100 AS lossRate
+      FROM ${VIEW} ${where}
+      GROUP BY machine_code
       ORDER BY lossRate DESC
     `);
     const highLoss = highLossResult.recordset[0] || { MACHINE: '-', lossRate: 0 };
 
-    // Loss Hour by Machine Top 10
     const lossByMachineResult = await applyInputs(pool.request(), inputs).query(`
       SELECT TOP 10
-        MACHINE,
-        ROUND(SUM(LOSS_HOUR), 1) AS lossHour
-      FROM RawDataTest
-      ${where}
-      GROUP BY MACHINE
+        machine_code AS MACHINE,
+        ROUND(SUM(loss_hour), 1) AS lossHour
+      FROM ${VIEW} ${where}
+      GROUP BY machine_code
       ORDER BY lossHour DESC
     `);
 
-    // Output/Hr by Machine (top 10 by output)
     const outputByMachineResult = await applyInputs(pool.request(), inputs).query(`
       SELECT TOP 10
-        MACHINE,
-        CAST(ROUND(SUM(ACTUAL_OUTPUT) / NULLIF(SUM(MC_RUN_TIME) / 60.0, 0), 0) AS INT) AS outputPerHr
-      FROM RawDataTest
-      ${where}
-      GROUP BY MACHINE
+        machine_code AS MACHINE,
+        CAST(ROUND(SUM(CAST(actual_output AS FLOAT)) / NULLIF(SUM(actual_hour), 0), 0) AS INT) AS outputPerHr
+      FROM ${VIEW} ${where}
+      GROUP BY machine_code
       ORDER BY outputPerHr DESC
     `);
 
-    // Run Time vs Loss Hour by Machine
     const rtVsLossResult = await applyInputs(pool.request(), inputs).query(`
       SELECT TOP 10
-        MACHINE,
-        ROUND(SUM(MC_RUN_TIME) / 60.0, 1) AS runTime,
-        ROUND(SUM(LOSS_HOUR), 1)           AS lossHour
-      FROM RawDataTest
-      ${where}
-      GROUP BY MACHINE
+        machine_code AS MACHINE,
+        ROUND(SUM(machine_run_time), 1) AS runTime,
+        ROUND(SUM(loss_hour), 1)        AS lossHour
+      FROM ${VIEW} ${where}
+      GROUP BY machine_code
       ORDER BY runTime DESC
     `);
 
-    // Machine Status (derived from loss rate thresholds)
     const statusResult = await applyInputs(pool.request(), inputs).query(`
       SELECT
-        MACHINE,
-        SUM(LOSS_HOUR) / NULLIF(SUM(MC_RUN_TIME) / 60.0, 0) * 100 AS lossRate
-      FROM RawDataTest
-      ${where}
-      GROUP BY MACHINE
+        machine_code AS MACHINE,
+        SUM(loss_hour) / NULLIF(SUM(machine_run_time), 0) * 100 AS lossRate
+      FROM ${VIEW} ${where}
+      GROUP BY machine_code
     `);
     const machines = statusResult.recordset;
     const statusSummary = machines.reduce(
-      (acc, m) => {
-        const rate = m.lossRate || 0;
-        if (rate > 10) acc.problem++;
-        else if (rate > 5) acc.watch++;
-        else acc.normal++;
-        return acc;
-      },
+      (acc, m) => { const r = m.lossRate || 0; if (r > 10) acc.problem++; else if (r > 5) acc.watch++; else acc.normal++; return acc; },
       { normal: 0, watch: 0, problem: 0 }
     );
 
-    // Machine Ranking (paginated)
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const offset = (page - 1) * pageSize;
 
     const rankingResult = await applyInputs(pool.request(), inputs).query(`
       SELECT
-        MACHINE,
-        MAX(PRODUCT_GROUP) AS productGroup,
-        CAST(ROUND(SUM(ACTUAL_OUTPUT), 0) AS BIGINT) AS totalOutput,
-        ROUND(SUM(MC_RUN_TIME) / 60.0, 1)  AS runTime,
-        ROUND(SUM(LOSS_HOUR), 1)            AS lossHour,
-        ROUND(SUM(LOSS_HOUR) / NULLIF(SUM(MC_RUN_TIME) / 60.0, 0) * 100, 2) AS lossRate
-      FROM RawDataTest
-      ${where}
-      GROUP BY MACHINE
+        machine_code                    AS MACHINE,
+        MAX(product_group_name)         AS productGroup,
+        CAST(SUM(CAST(actual_output AS BIGINT)) AS BIGINT) AS totalOutput,
+        ROUND(SUM(machine_run_time), 1) AS runTime,
+        ROUND(SUM(loss_hour), 1)        AS lossHour,
+        ROUND(SUM(loss_hour) / NULLIF(SUM(machine_run_time), 0) * 100, 2) AS lossRate
+      FROM ${VIEW} ${where}
+      GROUP BY machine_code
       ORDER BY totalOutput DESC
       OFFSET ${offset} ROWS FETCH NEXT ${pageSize} ROWS ONLY
     `);
 
     const countResult = await applyInputs(pool.request(), inputs).query(`
-      SELECT COUNT(DISTINCT MACHINE) AS total FROM RawDataTest ${where}
+      SELECT COUNT(DISTINCT machine_code) AS total FROM ${VIEW} ${where}
     `);
-    const totalMachines = countResult.recordset[0].total;
 
-    // Add status to each ranking row
     const rankingWithStatus = rankingResult.recordset.map((row) => ({
       ...row,
       status: row.lossRate > 10 ? 'Problem' : row.lossRate > 5 ? 'Watch' : 'Normal',
@@ -166,42 +126,33 @@ const getMachinePerformance = async (req, res, next) => {
       lossByMachine: lossByMachineResult.recordset,
       outputByMachine: outputByMachineResult.recordset,
       runTimeVsLoss: rtVsLossResult.recordset,
-      machineStatus: {
-        total: machines.length,
-        normal: statusSummary.normal,
-        watch: statusSummary.watch,
-        problem: statusSummary.problem,
-      },
+      machineStatus: { total: machines.length, ...statusSummary },
       ranking: {
         data: rankingWithStatus,
-        total: totalMachines,
+        total: countResult.recordset[0].total,
         page,
         pageSize,
-        totalPages: Math.ceil(totalMachines / pageSize),
+        totalPages: Math.ceil(countResult.recordset[0].total / pageSize),
       },
     });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 };
 
-// GET /api/dashboard/filters — distinct values for filter dropdowns
+// GET /api/dashboard/filters
 const getFilterOptions = async (req, res, next) => {
   try {
     const pool = getPool();
     const [machines, shifts, productGroups] = await Promise.all([
-      pool.request().query('SELECT DISTINCT MACHINE FROM RawDataTest ORDER BY MACHINE'),
-      pool.request().query('SELECT DISTINCT SHIFT FROM RawDataTest ORDER BY SHIFT'),
-      pool.request().query('SELECT DISTINCT PRODUCT_GROUP FROM RawDataTest ORDER BY PRODUCT_GROUP'),
+      pool.request().query('SELECT DISTINCT machine_code AS val FROM vw_oee_productivity ORDER BY val'),
+      pool.request().query('SELECT DISTINCT shift_code   AS val FROM vw_oee_productivity ORDER BY val'),
+      pool.request().query('SELECT DISTINCT product_group_name AS val FROM vw_oee_productivity ORDER BY val'),
     ]);
     res.json({
-      machines: machines.recordset.map((r) => r.MACHINE),
-      shifts: shifts.recordset.map((r) => r.SHIFT),
-      productGroups: productGroups.recordset.map((r) => r.PRODUCT_GROUP),
+      machines: machines.recordset.map((r) => r.val),
+      shifts: shifts.recordset.map((r) => r.val),
+      productGroups: productGroups.recordset.map((r) => r.val),
     });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 };
 
 module.exports = { getMachinePerformance, getFilterOptions };
