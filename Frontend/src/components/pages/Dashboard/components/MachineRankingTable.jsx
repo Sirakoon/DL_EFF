@@ -2,13 +2,13 @@ import React from 'react';
 
 function StatusBadge({ status }) {
   const map = {
-    Normal:  'bg-green-100 text-green-700',
-    Watch:   'bg-yellow-100 text-yellow-700',
+    Normal: 'bg-green-100 text-green-700',
+    Watch: 'bg-yellow-100 text-yellow-700',
     Problem: 'bg-red-100 text-red-700',
   };
   const dot = {
-    Normal:  'bg-green-500',
-    Watch:   'bg-yellow-400',
+    Normal: 'bg-green-500',
+    Watch: 'bg-yellow-400',
     Problem: 'bg-red-500',
   };
   return (
@@ -74,9 +74,8 @@ export default function MachineRankingTable({ ranking }) {
           {Array.from({ length: Math.min(totalPages, 6) }, (_, i) => i + 1).map((p) => (
             <span
               key={p}
-              className={`w-7 h-7 flex items-center justify-center rounded text-xs font-medium cursor-pointer ${
-                p === page ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100'
-              }`}
+              className={`w-7 h-7 flex items-center justify-center rounded text-xs font-medium cursor-pointer ${p === page ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100'
+                }`}
             >
               {p}
             </span>
@@ -93,9 +92,8 @@ function PageBtn({ disabled, label }) {
   return (
     <button
       disabled={disabled}
-      className={`px-2.5 py-1 rounded text-xs font-medium ${
-        disabled ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'
-      }`}
+      className={`px-2.5 py-1 rounded text-xs font-medium ${disabled ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'
+        }`}
     >
       {label}
     </button>

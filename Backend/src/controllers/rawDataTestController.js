@@ -31,7 +31,7 @@ const create = async (req, res, next) => {
       PRODUCT_DESC, MC_SPEED, CAPACITY, OEE_TARGET, MC_RUN_TIME,
       STD_HC, STD_HOUR, HOUR_PIECE_RATE, ACTUAL_OUTPUT, LOSS_HOUR,
       ACTUAL_BULK, ACTUAL_PALLET, ACTUAL_ASSIT, ACTUAL_HC,
-      ENTRY_DATE, UNDONE,
+      ENTRY_DATE, UNDONE, BREAKDOWN_TAG, BREAKDOWN_REASON,
     } = req.body;
 
     const pool = getPool();
@@ -57,13 +57,15 @@ const create = async (req, res, next) => {
       .input('ACTUAL_HC', sql.Int, ACTUAL_HC)
       .input('ENTRY_DATE', sql.DateTime2, ENTRY_DATE)
       .input('UNDONE', sql.VarChar(50), UNDONE)
+      .input('BREAKDOWN_TAG', sql.NVarChar(100), BREAKDOWN_TAG || null)
+      .input('BREAKDOWN_REASON', sql.NVarChar(200), BREAKDOWN_REASON || null)
       .query(`
         INSERT INTO RawDataTest (
           PRODUCTION_DATE, SHIFT, MACHINE, PRODUCT_GROUP, PRODUCT_CODE,
           PRODUCT_DESC, MC_SPEED, CAPACITY, OEE_TARGET, MC_RUN_TIME,
           STD_HC, STD_HOUR, HOUR_PIECE_RATE, ACTUAL_OUTPUT, LOSS_HOUR,
           ACTUAL_BULK, ACTUAL_PALLET, ACTUAL_ASSIT, ACTUAL_HC,
-          ENTRY_DATE, UNDONE
+          ENTRY_DATE, UNDONE, BREAKDOWN_TAG, BREAKDOWN_REASON
         )
         OUTPUT INSERTED.ID
         VALUES (
@@ -71,7 +73,7 @@ const create = async (req, res, next) => {
           @PRODUCT_DESC, @MC_SPEED, @CAPACITY, @OEE_TARGET, @MC_RUN_TIME,
           @STD_HC, @STD_HOUR, @HOUR_PIECE_RATE, @ACTUAL_OUTPUT, @LOSS_HOUR,
           @ACTUAL_BULK, @ACTUAL_PALLET, @ACTUAL_ASSIT, @ACTUAL_HC,
-          @ENTRY_DATE, @UNDONE
+          @ENTRY_DATE, @UNDONE, @BREAKDOWN_TAG, @BREAKDOWN_REASON
         )
       `);
 
@@ -88,7 +90,7 @@ const update = async (req, res, next) => {
       PRODUCT_DESC, MC_SPEED, CAPACITY, OEE_TARGET, MC_RUN_TIME,
       STD_HC, STD_HOUR, HOUR_PIECE_RATE, ACTUAL_OUTPUT, LOSS_HOUR,
       ACTUAL_BULK, ACTUAL_PALLET, ACTUAL_ASSIT, ACTUAL_HC,
-      ENTRY_DATE, UNDONE,
+      ENTRY_DATE, UNDONE, BREAKDOWN_TAG, BREAKDOWN_REASON,
     } = req.body;
 
     const pool = getPool();
@@ -115,29 +117,33 @@ const update = async (req, res, next) => {
       .input('ACTUAL_HC', sql.Int, ACTUAL_HC)
       .input('ENTRY_DATE', sql.DateTime2, ENTRY_DATE)
       .input('UNDONE', sql.VarChar(50), UNDONE)
+      .input('BREAKDOWN_TAG', sql.NVarChar(100), BREAKDOWN_TAG || null)
+      .input('BREAKDOWN_REASON', sql.NVarChar(200), BREAKDOWN_REASON || null)
       .query(`
         UPDATE RawDataTest SET
-          PRODUCTION_DATE = @PRODUCTION_DATE,
-          SHIFT           = @SHIFT,
-          MACHINE         = @MACHINE,
-          PRODUCT_GROUP   = @PRODUCT_GROUP,
-          PRODUCT_CODE    = @PRODUCT_CODE,
-          PRODUCT_DESC    = @PRODUCT_DESC,
-          MC_SPEED        = @MC_SPEED,
-          CAPACITY        = @CAPACITY,
-          OEE_TARGET      = @OEE_TARGET,
-          MC_RUN_TIME     = @MC_RUN_TIME,
-          STD_HC          = @STD_HC,
-          STD_HOUR        = @STD_HOUR,
-          HOUR_PIECE_RATE = @HOUR_PIECE_RATE,
-          ACTUAL_OUTPUT   = @ACTUAL_OUTPUT,
-          LOSS_HOUR       = @LOSS_HOUR,
-          ACTUAL_BULK     = @ACTUAL_BULK,
-          ACTUAL_PALLET   = @ACTUAL_PALLET,
-          ACTUAL_ASSIT    = @ACTUAL_ASSIT,
-          ACTUAL_HC       = @ACTUAL_HC,
-          ENTRY_DATE      = @ENTRY_DATE,
-          UNDONE          = @UNDONE
+          PRODUCTION_DATE  = @PRODUCTION_DATE,
+          SHIFT            = @SHIFT,
+          MACHINE          = @MACHINE,
+          PRODUCT_GROUP    = @PRODUCT_GROUP,
+          PRODUCT_CODE     = @PRODUCT_CODE,
+          PRODUCT_DESC     = @PRODUCT_DESC,
+          MC_SPEED         = @MC_SPEED,
+          CAPACITY         = @CAPACITY,
+          OEE_TARGET       = @OEE_TARGET,
+          MC_RUN_TIME      = @MC_RUN_TIME,
+          STD_HC           = @STD_HC,
+          STD_HOUR         = @STD_HOUR,
+          HOUR_PIECE_RATE  = @HOUR_PIECE_RATE,
+          ACTUAL_OUTPUT    = @ACTUAL_OUTPUT,
+          LOSS_HOUR        = @LOSS_HOUR,
+          ACTUAL_BULK      = @ACTUAL_BULK,
+          ACTUAL_PALLET    = @ACTUAL_PALLET,
+          ACTUAL_ASSIT     = @ACTUAL_ASSIT,
+          ACTUAL_HC        = @ACTUAL_HC,
+          ENTRY_DATE       = @ENTRY_DATE,
+          UNDONE           = @UNDONE,
+          BREAKDOWN_TAG    = @BREAKDOWN_TAG,
+          BREAKDOWN_REASON = @BREAKDOWN_REASON
         WHERE ID = @id
       `);
 

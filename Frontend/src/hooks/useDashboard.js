@@ -28,7 +28,7 @@ export function useFilterOptions() {
   useEffect(() => {
     getFilterOptions()
       .then(setOptions)
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   return options;

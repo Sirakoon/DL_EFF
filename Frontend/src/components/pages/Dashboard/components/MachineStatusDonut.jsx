@@ -9,7 +9,7 @@ export default function MachineStatusDonut({ data }) {
 
   const pieData = [
     { name: 'Normal', value: normal, color: COLORS.normal },
-    { name: 'Watch',  value: watch,  color: COLORS.watch },
+    { name: 'Watch', value: watch, color: COLORS.watch },
     { name: 'Problem', value: problem, color: COLORS.problem },
   ].filter((d) => d.value > 0);
 
@@ -56,8 +56,8 @@ export default function MachineStatusDonut({ data }) {
         {/* Legend */}
         <div className="flex flex-col gap-3">
           {[
-            { label: 'Normal',  value: normal,  color: COLORS.normal },
-            { label: 'Watch',   value: watch,   color: COLORS.watch },
+            { label: 'Normal', value: normal, color: COLORS.normal },
+            { label: 'Watch', value: watch, color: COLORS.watch },
             { label: 'Problem', value: problem, color: COLORS.problem },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-2">
