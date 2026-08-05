@@ -21,9 +21,9 @@ const { sql, getPool } = require('../config/db');
 function validateBody(body) {
   const errors = [];
   const REQUIRED = [
-    'production_date','shift_code','machine_code','product_code',
-    'machine_run_time','std_hc','std_hour','hour_piece_rate',
-    'actual_output','actual_hc','loss_hour',
+    'production_date', 'shift_code', 'machine_code', 'product_code',
+    'machine_run_time', 'std_hc', 'std_hour', 'hour_piece_rate',
+    'actual_output', 'actual_hc', 'loss_hour',
   ];
   REQUIRED.forEach((k) => {
     if (body[k] == null || body[k] === '') errors.push(`${k} is required`);
@@ -31,7 +31,7 @@ function validateBody(body) {
   const today = new Date().toISOString().slice(0, 10);
   if (body.production_date && body.production_date > today)
     errors.push('production_date cannot be in the future');
-  if (body.shift_code && !['A','B','C'].includes(body.shift_code))
+  if (body.shift_code && !['A', 'B', 'C'].includes(body.shift_code))
     errors.push('shift_code must be A, B, or C');
   const rng = (k, lo, hi) => {
     const v = Number(body[k]);
@@ -398,10 +398,10 @@ const exportCsv = async (req, res, next) => {
     const request = pool.request();
 
     if (dateFrom) { conditions.push('production_date >= @dateFrom'); request.input('dateFrom', sql.Date, dateFrom); }
-    if (dateTo)   { conditions.push('production_date <= @dateTo');   request.input('dateTo',   sql.Date, dateTo);   }
-    if (shift)    { conditions.push('shift_code = @shift');          request.input('shift',    sql.Char(1), shift); }
+    if (dateTo) { conditions.push('production_date <= @dateTo'); request.input('dateTo', sql.Date, dateTo); }
+    if (shift) { conditions.push('shift_code = @shift'); request.input('shift', sql.Char(1), shift); }
     if (productGroup) { conditions.push('product_group_name = @productGroup'); request.input('productGroup', sql.VarChar(50), productGroup); }
-    if (productCode)  { conditions.push('product_code = @productCode');        request.input('productCode',  sql.VarChar(30), productCode);  }
+    if (productCode) { conditions.push('product_code = @productCode'); request.input('productCode', sql.VarChar(30), productCode); }
 
     const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
     const result = await request.query(`
@@ -432,7 +432,7 @@ const exportCsv = async (req, res, next) => {
     const csv = [headers.join(','), ...rows.map((r) => headers.map((h) => escape(r[h])).join(','))].join('\r\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="pd_records_${new Date().toISOString().slice(0,10)}.csv"`);
+    res.setHeader('Content-Disposition', `attachment; filename="pd_records_${new Date().toISOString().slice(0, 10)}.csv"`);
     res.send('﻿' + csv); // BOM for Excel UTF-8 compat
   } catch (err) { next(err); }
 };

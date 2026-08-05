@@ -17,18 +17,18 @@ const { sql, getPool } = require('../config/db');
    value = { main: 'Gown'|'Drape'|'CWC', target: DL Eff % target }
 ─────────────────────────────────────────────────────────────────── */
 const GROUP_MAP = {
-  'CLSP':        { main: 'Gown',  target: 3.1 },
-  'CLHP':        { main: 'Gown',  target: 3.1 },
-  'FPP':         { main: 'Gown',  target: 3.1 },
-  'Blueline':    { main: 'Gown',  target: 3.1 },
-  'Urology':     { main: 'Gown',  target: 3.1 },
-  'Armsleeve':   { main: 'Gown',  target: 3.1 },
-  'Autodrape':   { main: 'Drape', target: 3.1 },
+  'CLSP': { main: 'Gown', target: 3.1 },
+  'CLHP': { main: 'Gown', target: 3.1 },
+  'FPP': { main: 'Gown', target: 3.1 },
+  'Blueline': { main: 'Gown', target: 3.1 },
+  'Urology': { main: 'Gown', target: 3.1 },
+  'Armsleeve': { main: 'Gown', target: 3.1 },
+  'Autodrape': { main: 'Drape', target: 3.1 },
   'Manualdrape': { main: 'Drape', target: 3.1 },
-  'MeporeAuto':  { main: 'CWC',   target: 6.0 },
-  'MeporeManual':{ main: 'CWC',   target: 6.0 },
-  'MefixAuto':   { main: 'CWC',   target: 6.0 },
-  'MefixManual': { main: 'CWC',   target: 6.0 },
+  'MeporeAuto': { main: 'CWC', target: 6.0 },
+  'MeporeManual': { main: 'CWC', target: 6.0 },
+  'MefixAuto': { main: 'CWC', target: 6.0 },
+  'MefixManual': { main: 'CWC', target: 6.0 },
 };
 
 const MAIN_TARGETS = { Gown: 3.1, Drape: 3.1, CWC: 6.0 };
