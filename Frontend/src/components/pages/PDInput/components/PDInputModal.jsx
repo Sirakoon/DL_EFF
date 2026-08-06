@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { HiXMark, HiCheck, HiExclamationCircle, HiLockClosed } from 'react-icons/hi2';
 import { TbLoader2 } from 'react-icons/tb';
 import {
@@ -6,13 +6,14 @@ import {
   createPdInput, updatePdInput,
 } from '../../../../services/api';
 import { toast } from '../../../../lib/toast';
+import { todayStr } from '../../../../utils/date';
 
-const EMPTY = {
-  production_date: new Date().toISOString().slice(0, 10), shift_code: '', machine_code: '', product_group: '',
+const getEmptyForm = () => ({
+  production_date: todayStr(), shift_code: '', machine_code: '', product_group: '',
   product_code: '', machine_run_time: '', std_hc: '', std_hour: '',
   hour_piece_rate: '', actual_output: '', loss_hour: '', actual_hc: '',
   actual_bulk_hr: '0', actual_pallet_hr: '0', actual_assist_hr: '0',
-};
+});
 
 /* ── primitives ─────────────────────────────────────────────────── */
 function Field({ label, required, hint, error, children }) {
@@ -38,13 +39,11 @@ const inputNormal = `${inputBase} bg-white text-gray-800 border-gray-200 hover:b
 const inputError = `${inputBase} bg-white text-gray-800 border-red-300 ring-2 ring-red-200`;
 const inputRO = `${inputBase} bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed select-none`;
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
-
 function TInput({ value, onChange, type = 'text', readOnly, min, max, step, hasError }) {
   return (
     <input
       type={type} value={value ?? ''} onChange={onChange}
-      readOnly={readOnly} min={min} max={type === 'date' ? todayISO() : max} step={step}
+      readOnly={readOnly} min={min} max={type === 'date' ? todayStr() : max} step={step}
       className={readOnly ? inputRO : hasError ? inputError : inputNormal}
     />
   );
@@ -73,27 +72,32 @@ function AutoTag({ label, value }) {
   );
 }
 
-function SectionHead({ n, label, color }) {
-  const scheme = {
-    blue: 'bg-blue-600 text-blue-700 border-blue-100',
-    teal: 'bg-teal-600 text-teal-700 border-teal-100',
-    emerald: 'bg-emerald-600 text-emerald-700 border-emerald-100',
-    amber: 'bg-amber-500 text-amber-700 border-amber-100',
-  }[color];
-  const [bg, txt, bdr] = scheme.split(' ');
+const SECTION_COLOR_SCHEME = {
+  blue: 'bg-blue-600 text-blue-700 border-blue-100',
+  teal: 'bg-teal-600 text-teal-700 border-teal-100',
+  emerald: 'bg-emerald-600 text-emerald-700 border-emerald-100',
+  amber: 'bg-amber-500 text-amber-700 border-amber-100',
+};
+
+function SectionHead({ label, color }) {
+  const [bar, txt, bdr] = SECTION_COLOR_SCHEME[color].split(' ');
   return (
     <div className={`flex items-center gap-2.5 mb-3 pb-2.5 border-b ${bdr}`}>
-      <span className={`w-5 h-5 ${bg} text-white rounded-full text-[10px] font-black flex items-center justify-center flex-shrink-0`}>{n}</span>
+      <span className={`w-1.5 h-4 ${bar} rounded-full flex-shrink-0`} />
       <span className={`text-[11px] font-black ${txt} uppercase tracking-widest`}>{label}</span>
     </div>
   );
+}
+
+function SubLabel({ children }) {
+  return <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">{children}</div>;
 }
 
 /* ══════════════════════════════════════════════════════════════════ */
 export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
   const isEdit = mode === 'edit';
 
-  const [form, setForm] = useState(EMPTY);
+  const [form, setForm] = useState(getEmptyForm);
   const [machines, setMachines] = useState([]);
   const [products, setProducts] = useState([]);
   const [shifts, setShifts] = useState([]);
@@ -207,9 +211,9 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
           ) : (
             <div className="space-y-5">
 
-              {/* ① Basic Info */}
+              {/* Basic Info */}
               <div>
-                <SectionHead n="1" label="Basic Info" color="blue" />
+                <SectionHead label="Basic Info" color="blue" />
                 <div className="grid grid-cols-2 gap-x-4 gap-y-0">
                   {/* row 1 */}
                   <Field label="Production Date" required error={errors.production_date}>
@@ -229,15 +233,15 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                     </TSelect>
                   </Field>
                   <div className="flex flex-col justify-end pb-4">
-                    <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">OEE Target</div>
+                    <SubLabel>OEE Target</SubLabel>
                     <AutoTag label="Auto — from machine" value={selectedMachine?.oee_target != null ? `${(selectedMachine.oee_target * 100).toFixed(1)}%` : '—'} />
                   </div>
                 </div>
               </div>
 
-              {/* ② Product */}
+              {/* Product */}
               <div>
-                <SectionHead n="2" label="Product" color="teal" />
+                <SectionHead label="Product" color="teal" />
                 <div className="grid grid-cols-2 gap-x-4 gap-y-0">
                   {/* row 1 */}
                   <Field label="Product Group" required error={errors.product_group}>
@@ -254,25 +258,25 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                   </Field>
                   {/* row 2 — auto-fill tags, always rendered */}
                   <div className="flex flex-col justify-end pb-4">
-                    <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Description</div>
+                    <SubLabel>Description</SubLabel>
                     <AutoTag label="Auto — from product" value={selectedProduct?.product_description} />
                   </div>
                   <div className="grid grid-cols-2 gap-3 pb-4">
                     <div>
-                      <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">MC Speed</div>
+                      <SubLabel>MC Speed</SubLabel>
                       <AutoTag label="Pcs / min" value={selectedProduct?.mc_speed_pcs_hr} />
                     </div>
                     <div>
-                      <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Capacity</div>
+                      <SubLabel>Capacity</SubLabel>
                       <AutoTag label="Pcs / hr" value={selectedProduct?.capacity_pcs_hr} />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* ③ Production Data */}
+              {/* Production Data */}
               <div>
-                <SectionHead n="3" label="Production Data" color="emerald" />
+                <SectionHead label="Production Data" color="emerald" />
                 <div className="grid grid-cols-2 gap-x-4 gap-y-0">
                   <Field label="Machine Run Time" required hint="hr · 0–24" error={errors.machine_run_time}>
                     <TInput type="number" value={form.machine_run_time} onChange={set('machine_run_time')} step="0.1" min={0} max={24} hasError={!!errors.machine_run_time} />
@@ -295,9 +299,9 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                 </div>
               </div>
 
-              {/* ④ Loss Hours */}
+              {/* Loss Hours */}
               <div>
-                <SectionHead n="4" label="Loss Hours" color="amber" />
+                <SectionHead label="Loss Hours" color="amber" />
                 <div className="grid grid-cols-2 gap-x-4 gap-y-0">
                   <Field label="Loss Hour" required hint="0–13" error={errors.loss_hour}>
                     <TInput type="number" value={form.loss_hour} onChange={set('loss_hour')} step="0.01" min={0} max={13} hasError={!!errors.loss_hour} />

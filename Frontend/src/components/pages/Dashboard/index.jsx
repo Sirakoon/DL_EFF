@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { TbLoader2 } from 'react-icons/tb';
 import { useDashboard, useFilterOptions } from '../../../hooks/useDashboard';
+import { useAutoRefresh } from '../../../hooks/useAutoRefresh';
 import FilterBar from './components/FilterBar';
 import KPICard from './components/KPICard';
 import LossHourChart from './components/LossHourChart';
@@ -45,12 +47,22 @@ function Skeleton({ className }) {
 export default function Dashboard() {
   const [filters, setFilters] = useState({});
   const options = useFilterOptions();
-  const { data, loading, error } = useDashboard(filters);
+  const { data, loading, refreshing, error, reload } = useDashboard(filters);
+
+  /* background refresh: instant on socket push + 30s fallback poll — never blanks the page */
+  useAutoRefresh(() => reload(true));
 
   return (
     <div className="space-y-5">
       {/* Filter Bar */}
-      <FilterBar filters={filters} onChange={setFilters} options={options} />
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <FilterBar filters={filters} onChange={setFilters} options={options} />
+        {refreshing && (
+          <span className="flex items-center gap-1.5 text-[11px] text-gray-400 font-medium">
+            <TbLoader2 className="animate-spin" /> Updating…
+          </span>
+        )}
+      </div>
 
       {/* Error */}
       {error && (
@@ -59,88 +71,90 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* KPI Cards */}
-      {loading ? (
-        <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
-          {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-24" />)}
-        </div>
-      ) : data ? (
-        <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
-          <KPICard
-            icon={MachineIcon}
-            label="Total Machines"
-            value={data.kpi.machineCount.toLocaleString()}
-            unit="machines"
-            change={4.0}
-            changeLabel="vs last week"
-          />
-          <KPICard
-            icon={ClockIcon}
-            label="Total Run Time"
-            value={data.kpi.totalRunTime.toLocaleString()}
-            unit="hrs."
-            change={8.3}
-            changeLabel="vs last week"
-          />
-          <KPICard
-            icon={WarnIcon}
-            label="Total Loss Hour"
-            value={data.kpi.totalLossHour.toLocaleString()}
-            unit="hrs."
-            change={15.7}
-            changeLabel="vs last week"
-          />
-          <KPICard
-            icon={SpeedIcon}
-            label="Avg Output / Hr"
-            value={data.kpi.avgOutputPerHr.toLocaleString()}
-            unit="pcs/hr."
-            change={3.6}
-            changeLabel="vs last week"
-          />
-          <KPICard
-            icon={AlertIcon}
-            label="Highest Loss Machine"
-            value={data.kpi.highestLossMachine}
-            unit=""
-            highlight={`${data.kpi.highestLossRate}%`}
-            highlightColor="text-red-500"
-          />
-        </div>
-      ) : null}
+      <div className={`space-y-5 transition-opacity duration-200 ${refreshing ? 'opacity-60' : 'opacity-100'}`}>
+        {/* KPI Cards */}
+        {loading ? (
+          <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+            {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-24" />)}
+          </div>
+        ) : data ? (
+          <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+            <KPICard
+              icon={MachineIcon}
+              label="Total Machines"
+              value={data.kpi.machineCount.toLocaleString()}
+              unit="machines"
+              change={4.0}
+              changeLabel="vs last week"
+            />
+            <KPICard
+              icon={ClockIcon}
+              label="Total Run Time"
+              value={data.kpi.totalRunTime.toLocaleString()}
+              unit="hrs."
+              change={8.3}
+              changeLabel="vs last week"
+            />
+            <KPICard
+              icon={WarnIcon}
+              label="Total Loss Hour"
+              value={data.kpi.totalLossHour.toLocaleString()}
+              unit="hrs."
+              change={15.7}
+              changeLabel="vs last week"
+            />
+            <KPICard
+              icon={SpeedIcon}
+              label="Avg Output / Hr"
+              value={data.kpi.avgOutputPerHr.toLocaleString()}
+              unit="pcs/hr."
+              change={3.6}
+              changeLabel="vs last week"
+            />
+            <KPICard
+              icon={AlertIcon}
+              label="Highest Loss Machine"
+              value={data.kpi.highestLossMachine}
+              unit=""
+              highlight={`${data.kpi.highestLossRate}%`}
+              highlightColor="text-red-500"
+            />
+          </div>
+        ) : null}
 
-      {/* Charts Row 1 */}
-      {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Skeleton className="h-80" />
-          <Skeleton className="h-80" />
-        </div>
-      ) : data ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <LossHourChart data={data.lossByMachine} />
-          <OutputHrChart data={data.outputByMachine} />
-        </div>
-      ) : null}
+        {/* Charts Row 1 */}
+        {loading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Skeleton className="h-80" />
+            <Skeleton className="h-80" />
+          </div>
+        ) : data ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <LossHourChart data={data.lossByMachine} />
+            <OutputHrChart data={data.outputByMachine} />
+          </div>
+        ) : null}
 
-      {/* Charts Row 2 */}
-      {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Skeleton className="h-80" />
-          <Skeleton className="h-80" />
-        </div>
-      ) : data ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <RunTimeLossChart data={data.runTimeVsLoss} />
-          <MachineStatusDonut data={data.machineStatus} />
-        </div>
-      ) : null}
+        {/* Charts Row 2 */}
+        {loading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Skeleton className="h-80" />
+            <Skeleton className="h-80" />
+          </div>
+        ) : data ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <RunTimeLossChart data={data.runTimeVsLoss} />
+            <MachineStatusDonut data={data.machineStatus} />
+          </div>
+        ) : null}
 
-      {/* Ranking Table */}
-      {loading ? (
-        <Skeleton className="h-64" />
-      ) : data ? (
-        <MachineRankingTable ranking={data.ranking} />
-      ) : null}
+        {/* Ranking Table */}
+        {loading ? (
+          <Skeleton className="h-64" />
+        ) : data ? (
+          <MachineRankingTable ranking={data.ranking} />
+        ) : null}
+      </div>
     </div>
   );
 }

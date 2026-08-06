@@ -11,4 +11,11 @@ export const NAV_SECTIONS = [
       { key: 'pd-input', label: 'Data Records', icon: 'database' },
     ],
   },
+  {
+    label: 'Administration',
+    adminOnly: true,
+    items: [
+      { key: 'user-management', label: 'User Management', icon: 'users', adminOnly: true },
+    ],
+  },
 ];

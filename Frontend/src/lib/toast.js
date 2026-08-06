@@ -1,4 +1,4 @@
-/* Simple pub-sub toast — import { toast } from '../lib/toast' then call toast.success('msg') */
+
 
 let _uid = 0;
 const _subs = new Set();

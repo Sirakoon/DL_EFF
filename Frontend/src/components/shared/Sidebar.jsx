@@ -1,7 +1,7 @@
 import React from 'react';
 import { NAV_SECTIONS } from '../../constants/navigation';
 import {
-  HiChartBarSquare, HiTableCells, HiChevronLeft, HiChevronRight,
+  HiChartBarSquare, HiTableCells, HiChevronLeft, HiChevronRight, HiUserGroup,
 } from 'react-icons/hi2';
 import { MdOutlineSpeed } from 'react-icons/md';
 import { TbActivityHeartbeat, TbDatabase } from 'react-icons/tb';
@@ -12,9 +12,12 @@ const ICONS = {
   'database': <TbDatabase className="w-5 h-5" />,
   'bar-chart': <HiChartBarSquare className="w-5 h-5" />,
   'table': <HiTableCells className="w-5 h-5" />,
+  'users': <HiUserGroup className="w-5 h-5" />,
 };
 
-export default function Sidebar({ activeKey, onSelect, collapsed, onToggle }) {
+export default function Sidebar({ activeKey, onSelect, collapsed, onToggle, isAdmin }) {
+  const visibleSections = NAV_SECTIONS.filter((section) => !section.adminOnly || isAdmin);
+
   return (
     <aside className={`flex flex-col bg-white border-r border-gray-100 h-screen sticky top-0 transition-all duration-300 shadow-sm ${collapsed ? 'w-16' : 'w-60'}`}>
 
@@ -33,7 +36,7 @@ export default function Sidebar({ activeKey, onSelect, collapsed, onToggle }) {
 
       {/* Nav */}
       <nav className="flex-1 py-4 overflow-y-auto space-y-1 px-2">
-        {NAV_SECTIONS.map((section) => (
+        {visibleSections.map((section) => (
           <div key={section.label}>
             {!collapsed && (
               <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest px-3 mb-2 mt-3">
@@ -66,6 +69,7 @@ export default function Sidebar({ activeKey, onSelect, collapsed, onToggle }) {
       {/* Collapse toggle */}
       <button
         onClick={onToggle}
+        title={collapsed ? 'Expand' : 'Collapse'}
         className="flex items-center justify-center gap-2 px-4 py-3 border-t border-gray-100 text-gray-400 hover:text-gray-700 hover:bg-gray-50 text-xs transition"
       >
         {collapsed

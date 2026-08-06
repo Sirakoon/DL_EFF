@@ -1,8 +1,9 @@
 require('dotenv').config();
-const sql = require('mssql/msnodesqlv8');  // native Windows driver for Windows Auth
+const sql = require('mssql/msnodesqlv8'); 
 
 const config = {
   connectionString: `Driver={ODBC Driver 17 for SQL Server};Server=${process.env.DB_SERVER};Database=${process.env.DB_NAME};Trusted_Connection=yes;`,
+  options: { useUTC: true },
 };
 
 let pool = null;

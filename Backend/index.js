@@ -1,8 +1,11 @@
-require('dotenv').config();
+const { PORT, corsOrigins, NODE_ENV } = require('./src/config/env');
+const http = require('http');
 const app = require('./src/app');
+const { initSocket } = require('./src/realtime');
 
-const PORT = process.env.PORT || 3000;
+const server = http.createServer(app);
+initSocket(server, corsOrigins);
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT} (${NODE_ENV})`);
 });

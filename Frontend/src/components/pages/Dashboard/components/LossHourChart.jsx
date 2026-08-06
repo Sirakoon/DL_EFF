@@ -4,7 +4,7 @@ import {
 } from 'recharts';
 
 export default function LossHourChart({ data = [] }) {
-  const chartData = [...data].reverse(); // show highest at top (horizontal)
+  const chartData = [...data].reverse(); 
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">

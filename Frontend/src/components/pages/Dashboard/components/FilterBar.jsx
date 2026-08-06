@@ -1,4 +1,5 @@
 import React from 'react';
+import { todayStr } from '../../../../utils/date';
 
 function FilterSelect({ label, icon, value, onChange, options, allLabel = 'All' }) {
   return (
@@ -59,7 +60,7 @@ export default function FilterBar({ filters, onChange, options }) {
             <input
               type="date"
               value={filters.dateFrom || ''}
-              max={filters.dateTo || new Date().toISOString().slice(0, 10)}
+              max={filters.dateTo || todayStr()}
               onChange={(e) => onChange({ ...filters, dateFrom: e.target.value })}
               className="text-xs text-gray-700 bg-transparent border-none outline-none cursor-pointer"
             />
@@ -68,7 +69,7 @@ export default function FilterBar({ filters, onChange, options }) {
               type="date"
               value={filters.dateTo || ''}
               min={filters.dateFrom || undefined}
-              max={new Date().toISOString().slice(0, 10)}
+              max={todayStr()}
               onChange={(e) => onChange({ ...filters, dateTo: e.target.value })}
               className="text-xs text-gray-700 bg-transparent border-none outline-none cursor-pointer"
             />

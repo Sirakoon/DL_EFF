@@ -1,5 +1,10 @@
 import LayoutPage from './components/shared/LayoutPage';
+import { AuthProvider } from './context/AuthContext';
 
 export default function App() {
-  return <LayoutPage />;
+  return (
+    <AuthProvider>
+      <LayoutPage />
+    </AuthProvider>
+  );
 }

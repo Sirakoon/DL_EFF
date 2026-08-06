@@ -1,35 +1,49 @@
 import React, { useState, Suspense, lazy } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import AuthModal from './AuthModal';
 import { ToastContainer } from './Toast';
+import { useAuth } from '../../context/AuthContext';
 
 const DlEffDashboard = lazy(() => import('../pages/DlEff/index'));
 const PDInputPage = lazy(() => import('../pages/PDInput/index'));
+const UserManagementPage = lazy(() => import('../pages/UserManagement/index'));
 
 const PAGE_META = {
   'dl-eff': { title: 'DL Efficiency Dashboard', subtitle: 'Direct Labour Efficiency · Gown / Drape / CWC' },
   'pd-input': { title: 'Data Input', subtitle: 'Production record management' },
+  'user-management': { title: 'User Management', subtitle: 'Approve registrations · reset passwords' },
 };
 
 const DEFAULT_KEY = 'dl-eff';
 
 export default function LayoutPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [activeKey, setActiveKey] = useState(DEFAULT_KEY);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const { title, subtitle } = PAGE_META[activeKey] ?? PAGE_META[DEFAULT_KEY];
+
+  const handleSelect = (key) => {
+    if (key === 'user-management' && !isAdmin) return;
+    setActiveKey(key);
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <ToastContainer />
       <Sidebar
         activeKey={activeKey}
-        onSelect={setActiveKey}
+        onSelect={handleSelect}
         collapsed={collapsed}
         onToggle={() => setCollapsed((c) => !c)}
+        isAdmin={isAdmin}
       />
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-        <Header title={title} subtitle={subtitle} />
+        <Header title={title} subtitle={subtitle} onLoginClick={() => setAuthModalOpen(true)} />
         <main className="flex-1 overflow-y-auto p-6">
           <Suspense fallback={
             <div className="flex items-center justify-center h-64 gap-3">
@@ -39,9 +53,12 @@ export default function LayoutPage() {
           }>
             {activeKey === 'dl-eff' && <DlEffDashboard />}
             {activeKey === 'pd-input' && <PDInputPage />}
+            {activeKey === 'user-management' && isAdmin && <UserManagementPage />}
           </Suspense>
         </main>
       </div>
+
+      {authModalOpen && <AuthModal onClose={() => setAuthModalOpen(false)} />}
     </div>
   );
 }

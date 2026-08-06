@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
-  HiPlus, HiMagnifyingGlass, HiPencilSquare, HiTrash,
+  HiPlus, HiPencilSquare, HiTrash,
   HiChevronLeft, HiChevronRight, HiArrowPath,
   HiCheckCircle, HiXCircle, HiFunnel, HiArrowDownTray,
 } from 'react-icons/hi2';
@@ -8,13 +8,13 @@ import { TbLoader2, TbDatabaseOff } from 'react-icons/tb';
 import { MdToday } from 'react-icons/md';
 import { getPdInputList, getPdInputFilters, exportPdInputCsv } from '../../../services/api';
 import { toast } from '../../../lib/toast';
+import { useAuth } from '../../../context/AuthContext';
+import { useAutoRefresh } from '../../../hooks/useAutoRefresh';
 import PDInputModal from './components/PDInputModal';
 import DeleteConfirm from './components/DeleteConfirm';
+import { todayStr as today, daysAgoStr as daysAgo } from '../../../utils/date';
 
 const PAGE_SIZE = 100;
-
-const today = () => new Date().toISOString().slice(0, 10);
-const daysAgo = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const fmt = (iso) => { if (!iso) return '—'; const [y, m, d] = iso.slice(0, 10).split('-'); return `${d} ${MONTHS[+m - 1]} ${y}`; };
 const num = (v, d = 2) => v != null ? Number(v).toLocaleString('en', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—';
@@ -41,6 +41,9 @@ function Th({ children, right }) {
 }
 
 export default function PDInputPage() {
+  const { user } = useAuth();
+  const canEdit = user && (user.role === 'admin' || user.role === 'editor');
+
   const [dateFrom, setDateFrom] = useState(daysAgo(7));
   const [dateTo, setDateTo] = useState(today());
   const [shift, setShift] = useState('');
@@ -51,39 +54,39 @@ export default function PDInputPage() {
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [filters, setFilters] = useState({ shifts: [], productGroups: [], productCodes: [] });
 
   const [modal, setModal] = useState(null); // null | { mode:'create'|'edit', data? }
   const [delRow, setDelRow] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const timerRef = useRef(null);
 
   /* load filter options once */
   useEffect(() => {
     getPdInputFilters().then((f) => setFilters(f)).catch(() => { });
   }, []);
 
-  const fetch = useCallback(() => {
-    setLoading(true);
+
+  const hasLoadedOnce = useRef(false);
+
+  const fetch = useCallback((background = false) => {
+    background ? setRefreshing(true) : setLoading(true);
     getPdInputList({ dateFrom, dateTo, shift, productGroup, productCode, page, pageSize: PAGE_SIZE })
       .then((res) => { setData(res.data); setTotal(res.total); setLastUpdated(new Date()); })
-      .catch((e) => toast.error(`Failed to load records: ${e.message}`))
-      .finally(() => setLoading(false));
+      .catch((e) => { if (!background) toast.error(`Failed to load records: ${e.message}`); })
+      .finally(() => {
+        background ? setRefreshing(false) : setLoading(false);
+        hasLoadedOnce.current = true;
+      });
   }, [dateFrom, dateTo, shift, productGroup, productCode, page]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { fetch(hasLoadedOnce.current); }, [fetch]);
 
-  /* 30-second auto-refresh */
-  useEffect(() => {
-    if (!autoRefresh) { clearInterval(timerRef.current); return; }
-    timerRef.current = setInterval(fetch, 30_000);
-    return () => clearInterval(timerRef.current);
-  }, [autoRefresh, fetch]);
+
+  useAutoRefresh(() => fetch(true), { enabled: autoRefresh });
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
-
-  const handleApply = () => { setPage(1); fetch(); };
 
   const handleClear = () => {
     setDateFrom(daysAgo(7));
@@ -96,7 +99,7 @@ export default function PDInputPage() {
 
   const isFiltered = dateFrom !== daysAgo(7) || dateTo !== today() || shift || productGroup || productCode;
 
-  const handleSaved = () => { setModal(null); setDelRow(null); fetch(); };
+  const handleSaved = () => { setModal(null); setDelRow(null); fetch(true); };
 
   const handleExport = () => {
     exportPdInputCsv({ dateFrom, dateTo, shift, productGroup, productCode })
@@ -114,13 +117,13 @@ export default function PDInputPage() {
           <div className="flex items-end gap-2">
             <div>
               <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">Date From</label>
-              <input type="date" value={dateFrom} max={dateTo} onChange={(e) => setDateFrom(e.target.value)}
+              <input type="date" value={dateFrom} max={dateTo} onChange={(e) => { setPage(1); setDateFrom(e.target.value); }}
                 className="h-10 border border-gray-200 rounded-xl px-3 text-sm text-gray-700 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition" />
             </div>
             <span className="text-gray-300 font-bold mb-2">→</span>
             <div>
               <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">Date To</label>
-              <input type="date" value={dateTo} min={dateFrom} max={today()} onChange={(e) => setDateTo(e.target.value)}
+              <input type="date" value={dateTo} min={dateFrom} max={today()} onChange={(e) => { setPage(1); setDateTo(e.target.value); }}
                 className="h-10 border border-gray-200 rounded-xl px-3 text-sm text-gray-700 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition" />
             </div>
           </div>
@@ -130,7 +133,7 @@ export default function PDInputPage() {
             <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">Shift</label>
             <div className="flex gap-1.5">
               {[{ v: '', l: 'All' }, { v: 'A', l: 'A' }, { v: 'B', l: 'B' }, { v: 'C', l: 'C' }].map(({ v, l }) => (
-                <button key={v} onClick={() => setShift(v)}
+                <button key={v} onClick={() => { setPage(1); setShift(v); }}
                   className={`h-10 w-12 rounded-xl text-sm font-bold border-2 transition-all ${shift === v ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300'
                     }`}>
                   {l}
@@ -142,19 +145,12 @@ export default function PDInputPage() {
           {/* Product Group */}
           <div>
             <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">Product Group</label>
-            <select value={productGroup} onChange={(e) => setProductGroup(e.target.value)}
+            <select value={productGroup} onChange={(e) => { setPage(1); setProductGroup(e.target.value); }}
               className="h-10 border border-gray-200 rounded-xl px-3 text-sm text-gray-700 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition min-w-[160px]">
               <option value="">All</option>
               {filters.productGroups.map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
           </div>
-
-          {/* Apply */}
-          <button onClick={handleApply} disabled={loading}
-            className="h-10 flex items-center gap-2 px-5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 disabled:opacity-60 transition shadow-md shadow-blue-200">
-            {loading ? <TbLoader2 className="animate-spin" /> : <HiMagnifyingGlass />}
-            Apply
-          </button>
 
           {/* Clear Filter */}
           <button
@@ -176,11 +172,13 @@ export default function PDInputPage() {
               <HiArrowDownTray className="text-base" />
               Export CSV
             </button>
-            <button onClick={() => setModal({ mode: 'create' })}
-              className="h-10 flex items-center gap-2 px-6 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-md shadow-emerald-200">
-              <HiPlus className="text-lg" />
-              Add Record
-            </button>
+            {canEdit && (
+              <button onClick={() => setModal({ mode: 'create' })}
+                className="h-10 flex items-center gap-2 px-6 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-md shadow-emerald-200">
+                <HiPlus className="text-lg" />
+                Add Record
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -197,8 +195,9 @@ export default function PDInputPage() {
               {total.toLocaleString()} records
             </span>
             {lastUpdated && (
-              <span className="text-[10px] text-gray-300 ml-2">
-                Updated {lastUpdated.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              <span className="text-[10px] text-gray-300 ml-2 flex items-center gap-1">
+                {refreshing && <TbLoader2 className="animate-spin text-gray-300" />}
+                Updated {lastUpdated.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Bangkok' })}
               </span>
             )}
           </div>
@@ -207,9 +206,9 @@ export default function PDInputPage() {
               className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition ${autoRefresh ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
               {autoRefresh ? '⟳ Auto' : 'Auto off'}
             </button>
-            <button onClick={fetch} disabled={loading}
+            <button onClick={() => fetch(true)} disabled={loading || refreshing}
               className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition">
-              <HiArrowPath className={loading ? 'animate-spin' : ''} />
+              <HiArrowPath className={(loading || refreshing) ? 'animate-spin' : ''} />
             </button>
           </div>
         </div>
@@ -226,7 +225,7 @@ export default function PDInputPage() {
             <p className="text-sm font-medium">No data in selected range</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className={`overflow-x-auto transition-opacity duration-200 ${refreshing ? 'opacity-60' : 'opacity-100'}`}>
             <table className="w-full text-sm">
               <thead className="bg-gray-50/80 border-b border-gray-200">
                 <tr>
@@ -243,7 +242,7 @@ export default function PDInputPage() {
                   <Th right>Prod STD</Th>
                   <Th right>Prod AC</Th>
                   <Th right>DL Eff %</Th>
-                  <Th>Actions</Th>
+                  {canEdit && <Th>Actions</Th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -269,18 +268,24 @@ export default function PDInputPage() {
                     <td className="px-4 py-3 text-right">
                       <DlBadge value={row.dl_eff_percent} target={3.1} />
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setModal({ mode: 'edit', data: row })}
-                          className="w-8 h-8 flex items-center justify-center text-blue-500 hover:bg-blue-100 rounded-lg transition">
-                          <HiPencilSquare className="text-base" />
-                        </button>
-                        <button onClick={() => setDelRow(row)}
-                          className="w-8 h-8 flex items-center justify-center text-red-400 hover:bg-red-100 rounded-lg transition">
-                          <HiTrash className="text-base" />
-                        </button>
-                      </div>
-                    </td>
+                    {canEdit && (
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setModal({ mode: 'edit', data: row })}
+                            title="Edit"
+                            className="w-8 h-8 flex items-center justify-center text-blue-500 hover:bg-blue-100 rounded-lg transition">
+                            <HiPencilSquare className="text-base" />
+                          </button>
+                          <button
+                            onClick={() => setDelRow(row)}
+                            title="Delete"
+                            className="w-8 h-8 flex items-center justify-center text-red-400 hover:bg-red-100 rounded-lg transition">
+                            <HiTrash className="text-base" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
