@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { HiCheckCircle, HiXCircle, HiInformationCircle, HiExclamationTriangle, HiXMark } from 'react-icons/hi2';
 import { toast } from '../../lib/toast';
 
@@ -9,7 +9,7 @@ const STYLES = {
   warning: { bar: 'bg-amber-500', icon: <HiExclamationTriangle className="text-amber-500 text-xl flex-shrink-0" />, text: 'text-amber-800', bg: 'bg-amber-50 border-amber-200' },
 };
 
-function ToastItem({ id, type, message, duration, onDone }) {
+function ToastItem({ type, message, duration, onDone }) {
   const [visible, setVisible] = useState(false);
   const s = STYLES[type] ?? STYLES.info;
 

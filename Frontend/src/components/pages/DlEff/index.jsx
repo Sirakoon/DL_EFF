@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   HiCalendar,
   HiCalendarDays,
@@ -98,26 +98,7 @@ const fmtDate = (iso) => {
   return `${d} ${MONTHS[+m - 1]} ${y}`;
 };
 
-// function MiniBar({ value, target, color }) {
-//   const pct =
-//     value != null && target
-//       ? Math.min(Math.max((value / (target * 2)) * 100, 0), 100)
-//       : 0;
-//   return (
-//     <div className="relative h-1.5 bg-gray-100 rounded-full mt-2">
-//       <div
-//         className={`h-full rounded-full transition-all duration-500 ${color}`}
-//         style={{ width: `${pct}%` }}
-//       />
-//       <div
-//         className="absolute top-[-2px] bottom-[-2px] w-[2px] bg-amber-400 rounded-full"
-//         style={{ left: "50%" }}
-//       />
-//     </div>
-//   );
-// }
-
-// Half-circle gauge — plain SVG arc (no chart library), same 0..target*2 scale as MiniBar.
+// Half-circle gauge — plain SVG arc (no chart library), same 0..target*2 scale as the DL Eff bar.
 function HalfGauge({ value, target, met, noData }) {
   const W = 108,
     H = 58,
@@ -180,85 +161,25 @@ function SubGroupCard({ sg, mainTarget, showShifts, selected, onClick }) {
   const noData = sg.dlEff == null;
 
   return (
-    <>
-      <button
-        onClick={onClick}
-        className={`group w-full text-left rounded-2xl p-4 border-2 transition-all duration-200 cursor-pointer ${
-          selected
-            ? "border-blue-500 shadow-lg ring-4 ring-blue-100 bg-blue-100"
-            : "border-gray-100 hover:border-gray-300 hover:shadow-sm bg-[#F8FAFC]"
-        }`}
-      >
-        <ProjectProgress
-          subGroup={sg.subGroup}
-          data={noData}
-          met={met}
-          dlEff={sg.dlEff}
-          target={target}
-          showShifts={showShifts}
-          shifts={sg.shifts}
-          selected={selected}
-        />
-      </button>
-      {/* <button
-        onClick={onClick}
-        className={`group w-full text-left rounded-2xl p-4 border-2 transition-all duration-200 bg-[#F8FAFC] ${
-          selected
-            ? "border-blue-500 shadow-lg ring-4 ring-blue-100"
-            : "border-gray-100 hover:border-gray-300 hover:shadow-sm"
-        }`}
-      >
-        <div className="flex items-start justify-between mb-2">
-          <span className="text-xs font-bold text-gray-500 uppercase tracking-wide leading-tight">
-            {sg.subGroup}
-          </span>
-          <span
-            className={`w-2 h-2 rounded-full flex-shrink-0 mt-0.5 ${noData ? "bg-gray-300" : met ? "bg-green-500" : "bg-red-500"}`}
-          />
-        </div>
-
-        <div
-          className={`text-[26px] font-black leading-none tracking-tight ${noData ? "text-gray-200" : met ? "text-green-600" : "text-red-600"}`}
-        >
-          {noData ? "—" : sg.dlEff.toFixed(1)}
-          {!noData && <span className="text-sm font-semibold ml-0.5">%</span>}
-        </div>
-
-        {!noData && target && (
-          <MiniBar
-            value={sg.dlEff}
-            target={target}
-            color={met ? "bg-green-500" : "bg-red-500"}
-          />
-        )}
-
-        <div className="text-[10px] text-gray-400 mt-2 font-medium">
-          Target {target ?? "—"}%
-        </div>
-
-        {showShifts && sg.shifts.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2.5 pt-2.5 border-t border-gray-100">
-            {sg.shifts.map((s) => {
-              const sm = s.dlEff != null && target != null && s.dlEff >= target;
-              return (
-                <span
-                  key={s.shift}
-                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                    s.dlEff == null
-                      ? "bg-gray-100 text-gray-400"
-                      : sm
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {s.shift} {s.dlEff == null ? "—" : `${s.dlEff.toFixed(1)}%`}
-                </span>
-              );
-            })}
-          </div>
-        )}
-      </button> */}
-    </>
+    <button
+      onClick={onClick}
+      className={`group w-full text-left rounded-2xl p-4 border-2 transition-all duration-200 cursor-pointer ${
+        selected
+          ? "border-blue-500 shadow-lg ring-4 ring-blue-100 bg-blue-100"
+          : "border-gray-100 hover:border-gray-300 hover:shadow-sm bg-[#F8FAFC]"
+      }`}
+    >
+      <ProjectProgress
+        subGroup={sg.subGroup}
+        data={noData}
+        met={met}
+        dlEff={sg.dlEff}
+        target={target}
+        showShifts={showShifts}
+        shifts={sg.shifts}
+        selected={selected}
+      />
+    </button>
   );
 }
 

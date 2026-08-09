@@ -3,7 +3,6 @@ const cors = require('cors');
 const { connect, getPool } = require('./config/db');
 const { corsOrigins, isProduction } = require('./config/env');
 const requestLogger = require('./middleware/requestLogger');
-const rawDataTestRoutes = require('./routes/rawDataTest');
 const dashboardRoutes = require('./routes/dashboard');
 const dlEffRoutes = require('./routes/dlEff');
 const pdInputRoutes = require('./routes/pdInput');
@@ -29,7 +28,6 @@ app.get('/health', async (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/raw-data-test', rawDataTestRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/dl-eff', dlEffRoutes);
 app.use('/api/pd-input', pdInputRoutes);

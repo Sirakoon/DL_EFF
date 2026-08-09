@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { HiExclamationTriangle, HiTrash } from 'react-icons/hi2';
 import { TbLoader2 } from 'react-icons/tb';
 import { deletePdInput } from '../../../../services/api';

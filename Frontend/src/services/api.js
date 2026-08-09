@@ -28,10 +28,6 @@ function qs(params = {}) {
   return s ? '?' + s : '';
 }
 
-/* ── Machine Performance (existing dashboard) ───────────────────── */
-export const getMachinePerformance = (p = {}) => fetchJSON(`/dashboard/machine-performance${qs(p)}`);
-export const getFilterOptions = () => fetchJSON('/dashboard/filters');
-
 /* ── DL Efficiency ──────────────────────────────────────────────── */
 export const getDlEffOverview = (p = {}) => fetchJSON(`/dl-eff/overview${qs(p)}`);
 export const getDlEffDetail = (p = {}) => fetchJSON(`/dl-eff/detail${qs(p)}`);

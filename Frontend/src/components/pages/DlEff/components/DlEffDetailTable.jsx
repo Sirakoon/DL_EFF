@@ -1,12 +1,10 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   HiCheckCircle,
   HiXCircle,
   HiChevronLeft,
   HiChevronRight,
   HiTableCells,
-  HiChevronDoubleLeft,
-  HiChevronDoubleRight,
 } from "react-icons/hi2";
 import { MdOutlineSpeed } from "react-icons/md";
 

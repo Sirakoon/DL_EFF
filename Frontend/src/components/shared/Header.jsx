@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { HiCalendarDays, HiUserCircle, HiArrowRightOnRectangle, HiKey } from 'react-icons/hi2';
 import { useAuth } from '../../context/AuthContext';
 import ChangePasswordModal from './ChangePasswordModal';

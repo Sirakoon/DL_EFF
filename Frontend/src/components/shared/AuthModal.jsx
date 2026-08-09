@@ -3,7 +3,6 @@ import { HiXMark, HiCheckCircle, HiExclamationCircle } from "react-icons/hi2";
 import { TbLoader2 } from "react-icons/tb";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "../../lib/toast";
-import Selected from "./Selected";
 
 const ROLES = [
   { value: "admin", label: "Admin — จัดการผู้ใช้ + เพิ่ม/แก้/ลบข้อมูล" },
