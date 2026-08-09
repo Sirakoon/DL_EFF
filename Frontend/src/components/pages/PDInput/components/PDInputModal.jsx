@@ -53,7 +53,7 @@ function TSelect({ value, onChange, disabled, hasError, children }) {
   return (
     <select
       value={value ?? ''} onChange={onChange} disabled={disabled}
-      className={`${disabled ? inputRO : hasError ? inputError : inputNormal} appearance-auto`}
+      className={`${disabled ? inputRO : hasError ? inputError : inputNormal} appearance-auto cursor-pointer`}
     >
       {children}
     </select>
@@ -338,13 +338,13 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
 
         {/* ── Footer ── */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
-          <button onClick={onClose} className="px-5 py-2.5 text-sm font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-100 transition">
+          <button onClick={onClose} className="px-5 py-2.5 text-sm font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-100 transition cursor-pointer">
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving || loading}
-            className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 active:scale-95 disabled:opacity-60 transition-all shadow-md shadow-blue-200"
+            className="flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 active:scale-95 disabled:opacity-60 transition-all shadow-md shadow-blue-200 cursor-pointer"
           >
             {saving
               ? <><TbLoader2 className="animate-spin text-sm" /> Saving...</>

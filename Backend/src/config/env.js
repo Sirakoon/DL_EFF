@@ -11,9 +11,9 @@ function fail(message) {
   process.exit(1);
 }
 
-if (!process.env.DB_SERVER) fail('DB_SERVER is not set (see .env.example)');
-if (!process.env.DB_NAME) fail('DB_NAME is not set (see .env.example)');
-if (!process.env.JWT_SECRET) fail('JWT_SECRET is not set (see .env.example)');
+if (!process.env.DB_SERVER) fail('DB_SERVER is not set (see .env)');
+if (!process.env.DB_NAME) fail('DB_NAME is not set (see .env)');
+if (!process.env.JWT_SECRET) fail('JWT_SECRET is not set (see .env)');
 if (isProduction && process.env.JWT_SECRET === PLACEHOLDER_JWT_SECRET) {
   fail('JWT_SECRET is still the placeholder value — set a real secret before running in production');
 }

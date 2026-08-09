@@ -33,7 +33,7 @@ export default function LayoutPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-[#F5F7FA] overflow-hidden">
       <ToastContainer />
       <Sidebar
         activeKey={activeKey}

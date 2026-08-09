@@ -39,17 +39,17 @@ export default function Header({ title, subtitle, onLoginClick }) {
             <span className={`text-[11px] font-bold px-2 py-1 rounded-full ${ROLE_BADGE[user.role]}`}>{user.role}</span>
             <span className="text-sm font-semibold text-gray-700">{user.username}</span>
             <button onClick={() => setShowChangePassword(true)} title="เปลี่ยนรหัสผ่าน"
-              className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-blue-600 transition">
+              className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-blue-600 transition cursor-pointer">
               <HiKey className="text-lg" />
             </button>
             <button onClick={logout} title="Logout"
-              className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-red-500 transition">
+              className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 hover:text-red-500 transition cursor-pointer">
               <HiArrowRightOnRectangle className="text-lg" />
             </button>
           </div>
         ) : (
           <button onClick={onLoginClick}
-            className="flex items-center gap-2 px-4 h-9 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition shadow-md shadow-blue-200">
+            className="flex items-center gap-2 px-4 h-9 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition shadow-md shadow-blue-200 cursor-pointer">
             <HiUserCircle className="text-base" />
             Login
           </button>

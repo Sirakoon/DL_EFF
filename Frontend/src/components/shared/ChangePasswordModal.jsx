@@ -61,7 +61,7 @@ export default function ChangePasswordModal({ onClose }) {
             </div>
           )}
           <button type="submit" disabled={submitting}
-            className="w-full h-11 flex items-center justify-center gap-2 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-60 transition shadow-md shadow-blue-200">
+            className="w-full h-11 flex items-center justify-center gap-2 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-60 transition shadow-md shadow-blue-200 cursor-pointer">
             {submitting && <TbLoader2 className="animate-spin" />}
             เปลี่ยนรหัสผ่าน
           </button>
