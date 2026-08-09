@@ -186,7 +186,7 @@ export default function UserManagementPage() {
                   <button
                     onClick={() => handleApprove(u.user_id)}
                     disabled={busyId === u.user_id}
-                    className="flex items-center gap-1.5 px-4 h-9 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 disabled:opacity-60 transition"
+                    className="flex items-center gap-1.5 px-4 h-9 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 disabled:opacity-60 transition cursor-pointer"
                   >
                     {busyId === u.user_id ? (
                       <TbLoader2 className="animate-spin" />
@@ -198,7 +198,7 @@ export default function UserManagementPage() {
                   <button
                     onClick={() => handleReject(u.user_id)}
                     disabled={busyId === u.user_id}
-                    className="flex items-center gap-1.5 px-4 h-9 text-xs font-bold text-red-600 border border-red-200 rounded-xl hover:bg-red-50 disabled:opacity-60 transition"
+                    className="flex items-center gap-1.5 px-4 h-9 text-xs font-bold text-red-600 border border-red-200 rounded-xl hover:bg-red-50 disabled:opacity-60 transition cursor-pointer"
                   >
                     <HiXCircle /> Reject
                   </button>
@@ -211,7 +211,7 @@ export default function UserManagementPage() {
                   type="button"
                   disabled={pendingPage === 1}
                   onClick={() => setPendingPage((prev) => prev - 1)}
-                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-500 hover:border-amber-400 hover:text-amber-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-500 hover:border-amber-400 hover:text-amber-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition "
                 >
                   Prev
                 </button>

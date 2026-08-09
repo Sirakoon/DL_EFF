@@ -37,7 +37,7 @@ export default function ChangePasswordModal({ onClose }) {
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-base font-black text-gray-900">เปลี่ยนรหัสผ่าน</h2>
-          <button onClick={onClose} className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition">
+          <button onClick={onClose} className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition cursor-pointer">
             <HiXMark className="text-xl" />
           </button>
         </div>
