@@ -11,9 +11,9 @@ export default defineConfig({
   //   // pot: 5173,
   //   proxy: {
   //     //"/api": "http://localhost:80",
-  //     //"/api": "http://10.254.18.60:80",
+  //     //"/api": "http://10.245.97.200:80",
   //     //"/uploads": "http://localhost:80",
-  //     //"/uploads": "http://10.254.18.60:80",
+  //     //"/uploads": "http://10.245.97.200:80",
   //   },
   // },
 })

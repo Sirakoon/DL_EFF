@@ -16,17 +16,29 @@ SET NOCOUNT ON;
 DECLARE @total INT = 500;
 DECLARE @i INT = 0;
 
-DECLARE @machines TABLE (rn INT IDENTITY(1,1), machine_code VARCHAR(30), oee_target DECIMAL(5,3));
+DECLARE @machines TABLE (machine_code VARCHAR(30), oee_target DECIMAL(5,3));
 INSERT INTO @machines (machine_code, oee_target)
 SELECT machine_code, oee_target FROM dim_machine WHERE is_active = 1 AND oee_target > 0;
 
-DECLARE @products TABLE (rn INT IDENTITY(1,1), product_code VARCHAR(30), mc_speed DECIMAL(10,2));
+DECLARE @products TABLE (product_code VARCHAR(30), mc_speed DECIMAL(10,2));
 INSERT INTO @products (product_code, mc_speed)
 SELECT product_code, mc_speed_pcs_hr FROM dim_product
 WHERE is_active = 1 AND mc_speed_pcs_hr > 0 AND capacity_pcs_hr IS NOT NULL;
 
 DECLARE @machineCount INT = (SELECT COUNT(*) FROM @machines);
 DECLARE @productCount INT = (SELECT COUNT(*) FROM @products);
+
+IF @machineCount = 0
+BEGIN
+    RAISERROR('No active machines with a usable oee_target were found — aborting seed.', 16, 1);
+    RETURN;
+END
+
+IF @productCount = 0
+BEGIN
+    RAISERROR('No active products with a usable mc_speed/capacity were found — aborting seed.', 16, 1);
+    RETURN;
+END
 
 DECLARE @machine_code VARCHAR(30), @product_code VARCHAR(30), @mc_speed DECIMAL(10,2), @oee_target DECIMAL(5,3);
 DECLARE @shift_code CHAR(1), @production_date DATE;
@@ -36,11 +48,15 @@ DECLARE @actual_hour DECIMAL(9,2), @std_pcs_mh DECIMAL(18,4), @variance FLOAT, @
 
 WHILE @i < @total
 BEGIN
-    SELECT @machine_code = machine_code, @oee_target = oee_target
-    FROM @machines WHERE rn = 1 + ABS(CHECKSUM(NEWID())) % @machineCount;
+    -- TOP 1 ... ORDER BY NEWID() evaluates NEWID() once per row of the
+    -- scanned set and picks the true random top row — no rn/modulo
+    -- mismatch, and @machine_code/@product_code are guaranteed to be set
+    -- since @machineCount/@productCount are already verified > 0.
+    SELECT TOP 1 @machine_code = machine_code, @oee_target = oee_target
+    FROM @machines ORDER BY NEWID();
 
-    SELECT @product_code = product_code, @mc_speed = mc_speed
-    FROM @products WHERE rn = 1 + ABS(CHECKSUM(NEWID())) % @productCount;
+    SELECT TOP 1 @product_code = product_code, @mc_speed = mc_speed
+    FROM @products ORDER BY NEWID();
 
     SET @shift_code = (SELECT CASE ABS(CHECKSUM(NEWID())) % 3 WHEN 0 THEN 'A' WHEN 1 THEN 'B' ELSE 'C' END);
     SET @production_date = DATEADD(DAY, ABS(CHECKSUM(NEWID())) % 31, '2026-08-01');
