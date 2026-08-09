@@ -22,7 +22,7 @@ export default function LayoutPage() {
   const isAdmin = user?.role === 'admin';
 
   const [activeKey, setActiveKey] = useState(DEFAULT_KEY);
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const { title, subtitle } = PAGE_META[activeKey] ?? PAGE_META[DEFAULT_KEY];
