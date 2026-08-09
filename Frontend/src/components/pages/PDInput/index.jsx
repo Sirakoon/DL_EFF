@@ -106,6 +106,12 @@ const colorProductGroup = {
   MeporeAuto: ColorGroup.CWC,
   MefixManual: ColorGroup.CWC,
 };
+const DEFAULT_BADGE_COLOR = {
+  text: "text-gray-600",
+  bg: "bg-gray-100",
+  border: "border-gray-100",
+  hoverBorder: "hover:border-gray-300",
+};
 
 /* ── DL Eff badge ── */
 function DlBadge({ value, target = 3.1 }) {
@@ -511,21 +517,31 @@ export default function PDInputPage() {
                       {fmt(row.production_date)}
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`${colorShift[row.shift_code].text} ${colorShift[row.shift_code].bg} ${colorShift[row.shift_code].border} inline-flex items-center justify-center w-8 h-8 text-xs font-black rounded-xl`}
-                      >
-                        {row.shift_code}
-                      </span>
+                      {(() => {
+                        const c = colorShift[row.shift_code] ?? DEFAULT_BADGE_COLOR;
+                        return (
+                          <span
+                            className={`${c.text} ${c.bg} ${c.border} inline-flex items-center justify-center w-8 h-8 text-xs font-black rounded-xl`}
+                          >
+                            {row.shift_code}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3 font-semibold text-gray-800">
                       {row.machine_code}
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`${colorProductGroup[row.product_group_name].text} ${colorProductGroup[row.product_group_name].bg} ${colorProductGroup[row.product_group_name].border}  text-xs font-medium px-2.5 py-1 rounded-full`}
-                      >
-                        {row.product_group_name}
-                      </span>
+                      {(() => {
+                        const c = colorProductGroup[row.product_group_name] ?? DEFAULT_BADGE_COLOR;
+                        return (
+                          <span
+                            className={`${c.text} ${c.bg} ${c.border}  text-xs font-medium px-2.5 py-1 rounded-full`}
+                          >
+                            {row.product_group_name}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3 text-xs font-mono text-gray-600">
                       {row.product_code}

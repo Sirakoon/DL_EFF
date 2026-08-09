@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   HiCheckCircle,
   HiXCircle,
@@ -58,7 +58,6 @@ const fmtDateTime = (iso) =>
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState([]);
-  const [filteredUser, setFilteredUser] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
   const [resetTarget, setResetTarget] = useState(null);
@@ -84,23 +83,21 @@ export default function UserManagementPage() {
     load();
   }, [load]);
 
-  useEffect(() => {
-    setFilteredUser(filteredData);
-  }, [search, role]);
+  const filteredData = useMemo(() => {
+    return users.filter((item) => {
+      const keyword = search.trim().toLowerCase();
+      const usernameSearch =
+        !keyword ||
+        String(item.username || "")
+          .toLowerCase()
+          .includes(keyword);
 
-  const filteredData = users.filter((item) => {
-    const keyword = search.trim().toLowerCase();
-    const usernameSearch =
-      !keyword ||
-      String(item.username || "")
-        .toLowerCase()
-        .includes(keyword);
+      const roleFilter =
+        !role || String(item.role || "").toLowerCase() === role.toLowerCase();
 
-    const roleFilter =
-      !role || String(item.role || "").toLowerCase() === role.toLowerCase();
-
-    return usernameSearch && roleFilter;
-  });
+      return usernameSearch && roleFilter;
+    });
+  }, [users, search, role]);
 
   const handleApprove = async (id) => {
     setBusyId(id);
@@ -135,10 +132,7 @@ export default function UserManagementPage() {
   };
 
   const pending = users.filter((u) => u.status === "pending");
-  const others =
-    search == "" && role == ""
-      ? users.filter((u) => u.status !== "pending")
-      : filteredUser.filter((u) => u.status !== "pending");
+  const others = filteredData.filter((u) => u.status !== "pending");
 
   const userTotalPages = Math.ceil(others.length / USER_PER_PAGE);
 
@@ -251,7 +245,7 @@ export default function UserManagementPage() {
           <HiUserGroup className="text-gray-400 text-lg" />
           <span className="font-black text-gray-800">All Users</span>
           <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full ml-1 w-8 h-8 flex items-center justify-center">
-            {search == "" && role == "" ? users.length : filteredUser.length}
+            {filteredData.length}
           </span>
           <div className="flex flex-col gap-1">
             <div className="relative w-[250px]">

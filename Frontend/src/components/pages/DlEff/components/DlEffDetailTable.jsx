@@ -247,6 +247,11 @@ export default function DlEffDetailTable({ data, loading, target }) {
                     border: "border-indigo-100",
                   },
                 };
+                const shiftColor = colorShift[row.SHIFT] ?? {
+                  text: "text-gray-600",
+                  bg: "bg-gray-100",
+                  border: "border-gray-100",
+                };
                 return (
                   <tr
                     key={row.ID}
@@ -261,7 +266,7 @@ export default function DlEffDetailTable({ data, loading, target }) {
                     <td className="px-3 py-3">
                       {/* <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-100 text-blue-700 text-xs font-black"> */}
                       <span
-                        className={`${colorShift[row.SHIFT].bg} ${colorShift[row.SHIFT].text} ${colorShift[row.SHIFT].boder}
+                        className={`${shiftColor.bg} ${shiftColor.text} ${shiftColor.border}
                             inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-black
                         `}
                       >

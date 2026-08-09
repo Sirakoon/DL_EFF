@@ -212,8 +212,8 @@ const update = async (req, res, next) => {
       production_date, shift_code, machine_run_time, std_hc, std_hour,
       hour_piece_rate, actual_output, loss_hour, actual_hc,
       actual_bulk_hr = 0, actual_pallet_hr = 0, actual_assist_hr = 0,
-      updated_by = null,
     } = req.body;
+    const updated_by = req.user.username;
 
     const pool = getPool();
     const result = await pool.request()
