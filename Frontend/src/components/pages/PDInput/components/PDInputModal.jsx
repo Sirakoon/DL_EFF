@@ -332,8 +332,8 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                   <Field label="Actual Output" required hint="integer" error={errors.actual_output}>
                     <TInput type="number" value={form.actual_output} onChange={set('actual_output')} step="1" min={0} hasError={!!errors.actual_output} />
                   </Field>
-                  <Field label="Actual HC" required hint="0–25 · integer" error={errors.actual_hc}>
-                    <TInput type="number" value={form.actual_hc} onChange={set('actual_hc')} step="1" min={0} max={25} hasError={!!errors.actual_hc} />
+                  <Field label="Actual HC" required hint="0–25" error={errors.actual_hc}>
+                    <TInput type="number" value={form.actual_hc} onChange={set('actual_hc')} step="0.01" min={0} max={25} hasError={!!errors.actual_hc} />
                   </Field>
                 </div>
               </div>
