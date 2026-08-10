@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { HiXMark, HiCheck, HiExclamationCircle, HiLockClosed } from 'react-icons/hi2';
 import { TbLoader2 } from 'react-icons/tb';
 import {
-  getMasterMachines, getMasterProducts, getMasterShifts,
+  getMasterMachines, getMasterProducts, getMasterMachineProductGroups, getMasterShifts,
   createPdInput, updatePdInput,
 } from '../../../../services/api';
 import { toast } from '../../../../lib/toast';
@@ -100,6 +100,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
   const [form, setForm] = useState(getEmptyForm);
   const [machines, setMachines] = useState([]);
   const [products, setProducts] = useState([]);
+  const [machineProductGroups, setMachineProductGroups] = useState([]);
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -108,17 +109,41 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
   const selectedMachine = machines.find((m) => m.machine_code === form.machine_code);
   const selectedProduct = products.find((p) => p.product_code === form.product_code);
 
-  const productGroups = useMemo(() =>
+  const allProductGroups = useMemo(() =>
     [...new Set(products.map((p) => p.product_group_name))].sort()
     , [products]);
+
+  // machine_code -> Set(product_group_name), built from records saved so far
+  const groupsByMachine = useMemo(() => {
+    const map = new Map();
+    machineProductGroups.forEach(({ machine_code, product_group_name }) => {
+      if (!map.has(machine_code)) map.set(machine_code, new Set());
+      map.get(machine_code).add(product_group_name);
+    });
+    return map;
+  }, [machineProductGroups]);
+
+  // groups known for the selected machine; null/empty means "not learned yet" — fall back to showing all
+  const machineGroups = form.machine_code ? groupsByMachine.get(form.machine_code) : null;
+
+  const productGroups = useMemo(() => (
+    machineGroups && machineGroups.size > 0
+      ? allProductGroups.filter((g) => machineGroups.has(g))
+      : allProductGroups
+  ), [allProductGroups, machineGroups]);
 
   const filteredProducts = useMemo(() =>
     form.product_group ? products.filter((p) => p.product_group_name === form.product_group) : []
     , [products, form.product_group]);
 
   useEffect(() => {
-    Promise.all([getMasterMachines(), getMasterProducts(), getMasterShifts()])
-      .then(([m, p, s]) => { setMachines(m.data ?? []); setProducts(p.data ?? []); setShifts(s.data ?? []); })
+    Promise.all([getMasterMachines(), getMasterProducts(), getMasterShifts(), getMasterMachineProductGroups()])
+      .then(([m, p, s, mpg]) => {
+        setMachines(m.data ?? []);
+        setProducts(p.data ?? []);
+        setShifts(s.data ?? []);
+        setMachineProductGroups(mpg.data ?? []);
+      })
       .catch((e) => toast.error(`Failed to load master data: ${e.message}`))
       .finally(() => setLoading(false));
   }, []);
@@ -147,6 +172,17 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
 
   const set = useCallback((k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value })), []);
   const handleGroupChange = (e) => setForm((f) => ({ ...f, product_group: e.target.value, product_code: '' }));
+
+  const handleMachineChange = (e) => {
+    const machine_code = e.target.value;
+    const groups = machine_code ? groupsByMachine.get(machine_code) : null;
+    const groupStillValid = !groups || groups.size === 0 || groups.has(form.product_group);
+    setForm((f) => (
+      groupStillValid
+        ? { ...f, machine_code }
+        : { ...f, machine_code, product_group: '', product_code: '' }
+    ));
+  };
 
   const validate = () => {
     const e = {};
@@ -227,7 +263,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                   </Field>
                   {/* row 2 */}
                   <Field label="Machine" required error={errors.machine_code}>
-                    <TSelect value={form.machine_code} onChange={set('machine_code')} hasError={!!errors.machine_code}>
+                    <TSelect value={form.machine_code} onChange={handleMachineChange} hasError={!!errors.machine_code}>
                       <option value="">Select Machine</option>
                       {machines.map((m) => <option key={m.machine_code} value={m.machine_code}>{m.machine_code}</option>)}
                     </TSelect>
@@ -244,7 +280,10 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                 <SectionHead label="Product" color="teal" />
                 <div className="grid grid-cols-2 gap-x-4 gap-y-0">
                   {/* row 1 */}
-                  <Field label="Product Group" required error={errors.product_group}>
+                  <Field
+                    label="Product Group" required error={errors.product_group}
+                    hint={machineGroups && machineGroups.size > 0 ? '· filtered by machine' : ''}
+                  >
                     <TSelect value={form.product_group} onChange={handleGroupChange} hasError={!!errors.product_group}>
                       <option value="">Select Product Group</option>
                       {productGroups.map((g) => <option key={g} value={g}>{g}</option>)}

@@ -1,4 +1,4 @@
-สรุปสิ่งที่ต้องทำก่อนขึ้น Production — โปรเจกต์ RealTimeUpdate
+สรุปสิ่งที่ต้องทำก่อนขึ้น Production — โปรเจกต์ DL Eff
 (สรุปจากสถานะโค้ดปัจจุบันในเครื่อง ณ วันที่ 2026-08-09)
 
 1. ตั้งค่า Environment Variables ของ Backend (Backend/.env)

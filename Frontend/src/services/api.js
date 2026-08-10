@@ -40,6 +40,7 @@ export const getPdInputFilters = () => fetchJSON('/pd-input/filters');
 /* ── PD Input — master dropdowns ───────────────────────────────── */
 export const getMasterMachines = () => fetchJSON('/pd-input/master/machines');
 export const getMasterProducts = () => fetchJSON('/pd-input/master/products');
+export const getMasterMachineProductGroups = () => fetchJSON('/pd-input/master/machine-product-groups');
 export const getMasterShifts = () => fetchJSON('/pd-input/master/shifts');
 
 /* ── PD Input — CRUD ────────────────────────────────────────────── */

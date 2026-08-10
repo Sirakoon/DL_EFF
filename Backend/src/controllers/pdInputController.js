@@ -110,6 +110,26 @@ const getProducts = async (req, res, next) => {
 };
 
 /* ═══════════════════════════════════════════════════════════════════
+   GET /api/pd-input/master/machine-product-groups
+   คู่ machine_code ↔ product_group_name ที่เคยบันทึกจริง
+   (ใช้กรอง dropdown Product Group ตาม Machine ที่เลือกในฟอร์ม)
+═══════════════════════════════════════════════════════════════════ */
+const getMachineProductGroups = async (req, res, next) => {
+  try {
+    const pool = getPool();
+    const result = await pool.request().query(`
+      SELECT m.machine_code, pg.product_group_name
+      FROM map_machine_product_group mpg
+      JOIN dim_machine m ON m.machine_id = mpg.machine_id
+      JOIN dim_product_group pg ON pg.product_group_id = mpg.product_group_id
+      WHERE m.is_active = 1
+      ORDER BY m.machine_code, pg.product_group_name
+    `);
+    res.json({ data: result.recordset });
+  } catch (err) { next(err); }
+};
+
+/* ═══════════════════════════════════════════════════════════════════
    GET /api/pd-input/master/shifts
 ═══════════════════════════════════════════════════════════════════ */
 const getShifts = async (req, res, next) => {
@@ -347,4 +367,7 @@ const exportCsv = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { getAll, getMachines, getProducts, getShifts, getFilters, create, update, remove, exportCsv };
+module.exports = {
+  getAll, getMachines, getProducts, getMachineProductGroups, getShifts, getFilters,
+  create, update, remove, exportCsv,
+};
