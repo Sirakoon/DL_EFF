@@ -105,6 +105,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [checkMachine, setCheckMachine] = useState(null);
 
   const selectedMachine = machines.find((m) => m.machine_code === form.machine_code);
   const selectedProduct = products.find((p) => p.product_code === form.product_code);
@@ -122,19 +123,31 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
     });
     return map;
   }, [machineProductGroups]);
+  console.log("check product : ", groupsByMachine )
+
+ 
 
   // groups known for the selected machine; null/empty means "not learned yet" — fall back to showing all
   const machineGroups = form.machine_code ? groupsByMachine.get(form.machine_code) : null;
 
-  const productGroups = useMemo(() => (
-    machineGroups && machineGroups.size > 0
-      ? allProductGroups.filter((g) => machineGroups.has(g))
-      : allProductGroups
-  ), [allProductGroups, machineGroups]);
+  // const productGroups = useMemo(() => (
+  //   machineGroups && machineGroups.size > 0
+  //     ? allProductGroups.filter((g) => machineGroups.has(g))
+  //     : allProductGroups
+  // ), [allProductGroups, machineGroups])
 
+  const productGroups = useMemo(() => {
+  if (!checkMachine) {
+    return [];
+  }
+  console.log(`check machine : ${checkMachine}`)
+  return Array.from(groupsByMachine.get(checkMachine) || []);
+}, [checkMachine, groupsByMachine]);
+  
+  
   const filteredProducts = useMemo(() =>
     form.product_group ? products.filter((p) => p.product_group_name === form.product_group) : []
-    , [products, form.product_group]);
+  , [products, form.product_group]);
 
   useEffect(() => {
     Promise.all([getMasterMachines(), getMasterProducts(), getMasterShifts(), getMasterMachineProductGroups()])
@@ -177,6 +190,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
     const machine_code = e.target.value;
     const groups = machine_code ? groupsByMachine.get(machine_code) : null;
     const groupStillValid = !groups || groups.size === 0 || groups.has(form.product_group);
+    setCheckMachine(machine_code)
     setForm((f) => (
       groupStillValid
         ? { ...f, machine_code }
@@ -284,7 +298,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                     label="Product Group" required error={errors.product_group}
                     hint={machineGroups && machineGroups.size > 0 ? '· filtered by machine' : ''}
                   >
-                    <TSelect value={form.product_group} onChange={handleGroupChange} hasError={!!errors.product_group}>
+                    <TSelect value={form.product_group} disabled={!form.machine_code} onChange={handleGroupChange} hasError={!!errors.product_group}>
                       <option value="">Select Product Group</option>
                       {productGroups.map((g) => <option key={g} value={g}>{g}</option>)}
                     </TSelect>
