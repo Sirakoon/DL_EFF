@@ -1,0 +1,78 @@
+สรุปสิ่งที่ต้องทำก่อนขึ้น Production — โปรเจกต์ DL Eff
+(สรุปจากสถานะโค้ดปัจจุบันในเครื่อง ณ วันที่ 2026-08-09)
+
+1. ตั้งค่า Environment Variables ของ Backend (Backend/.env)
+   - NODE_ENV=production (ต้องตั้งจริง ไม่งั้น error message จะรั่วรายละเอียดออก API และ
+     Backend/src/config/env.js จะไม่บังคับเช็คข้อ 2-3 ด้านล่าง)
+   - [ทำแล้ว 2026-08-09] JWT_SECRET ถูกเปลี่ยนเป็นค่าใหม่แบบสุ่ม 96 hex chars ใน
+     Backend/.env แล้ว — หมายเหตุ: การเปลี่ยนค่านี้ทำให้ token ที่เคย login ไว้ก่อนหน้าทั้งหมด
+     ใช้ไม่ได้ทันที (ต้อง login ใหม่) และถ้าเซิร์ฟเวอร์ production จริงใช้ไฟล์ .env คนละไฟล์กับที่
+     แก้นี้ ต้องสร้างค่าใหม่ซ้ำอีกครั้งด้วยคำสั่งเดิมแล้วตั้งบนเครื่อง production โดยตรง (อย่าก็อปค่า
+     เดียวกันไปใช้ซ้ำหลายเครื่อง)
+   - CORS_ORIGINS ต้องตั้งเป็น URL จริงของ frontend (ไม่มี fallback เป็น localhost ใน production
+     ถ้าไม่ตั้งเซิร์ฟเวอร์จะไม่ start)
+   - DB_SERVER, DB_NAME ให้ตรงกับ SQL Server instance ที่ใช้จริงบนเครื่อง production
+
+2. เตรียมฐานข้อมูลบนเซิร์ฟเวอร์ production
+   - รันสคริปต์ใน sql/ ตามลำดับเลข (001 ถึง 009) บนฐานข้อมูลใหม่ หรือใช้ sql2/ เป็น snapshot
+     สำหรับสร้าง schema ครั้งเดียวบนฐานข้อมูลเปล่า (ห้ามรันซ้ำกับ DB ที่มีอยู่แล้ว)
+   - ห้ามรัน sql/seed_mock_pd_data_aug2026.sql บนฐาน production (เป็นข้อมูลจำลองสำหรับทดสอบ
+     dashboard เท่านั้น) — ถ้าเคยรันไปแล้วบนฐานที่จะใช้จริง ให้ลบด้วย created_by = 'mock_data_script'
+   - เช็คว่ามีไฟล์ที่ยัง uncommitted อยู่ตอนนี้ (sql/seed_mock_pd_data_aug2026.sql ถูกแก้ไข,
+     โฟลเดอร์ sql2/ และไฟล์ "rebuild ssql.txt" ยังไม่ได้ add เข้า git) — ตัดสินใจว่าจะ commit
+     หรือทิ้ง ก่อน deploy จริง
+   - Backend เชื่อมต่อ SQL Server ด้วย Windows Authentication (Trusted_Connection) ผ่าน
+     ODBC Driver 17 (Backend/src/config/db.js) — เครื่อง/เซอร์วิสที่รัน Node ต้องติดตั้ง
+     ODBC Driver 17 for SQL Server และรันภายใต้ Windows account ที่มีสิทธิ์เข้าถึงฐานข้อมูลนี้จริง
+
+3. สมัครบัญชี admin คนแรกทันทีหลัง deploy
+   - ระบบตั้งให้ "ผู้ใช้คนแรกที่ register" กลายเป็น admin และ status=approved อัตโนมัติ
+     (คนถัดไปจะเป็น pending รอ admin อนุมัติ) — ต้องรีบสมัครบัญชี admin จริงทันทีหลังฐานข้อมูล
+     ว่างเปล่าพร้อมใช้งาน ก่อนมีคนอื่นสมัครตัดหน้า
+
+4. Build และ deploy Frontend
+   - สร้างไฟล์ Frontend/.env.production (ไม่ถูก track ใน git) ใส่ VITE_API_URL เป็น URL จริง
+     ของ backend (ต้องเป็น https:// ถ้า production ใช้ TLS)
+   - รัน npm run build ในโฟลเดอร์ Frontend เพื่อ build ไฟล์ static ออกที่ Frontend/dist/
+   - เตรียม hosting สำหรับ static files (IIS, Nginx หรือ static middleware อื่น) — ยังไม่ได้
+     ตัดสินใจไว้ในโปรเจกต์นี้
+
+5. ตัดสินใจเรื่อง CORS / origin ระหว่าง frontend-backend
+   - same origin (reverse proxy เดียวกัน proxy /api ไป backend) หรือ separate origins
+     (คนละ URL/พอร์ต) — ต้องเลือกก่อน แล้วตั้ง CORS_ORIGINS (backend) และ VITE_API_URL
+     (frontend) ให้ตรงกันแบบ exact scheme+host
+
+6. เตรียม process manager ให้ Backend รันค้างไว้
+   - ปัจจุบันยังไม่มีตัวคุม process (PM2 / NSSM / IIS+iisnode ฯลฯ) รันด้วย `npm start`
+     เฉย ๆ ถ้าเครื่อง reboot หรือ process crash จะไม่มีอะไร restart ให้อัตโนมัติ — ต้องเลือกและ
+     ตั้งค่าตัวใดตัวหนึ่งก่อนขึ้นจริง
+
+7. เตรียม HTTPS/TLS
+   - ทั้ง REST API และ Socket.IO (real-time) ยังไม่มีการตั้งค่า TLS ในโค้ด — ต้องมี reverse proxy
+     (Nginx/IIS) ทำ TLS termination ให้ ถ้าจะเปิดใช้งานผ่านอินเทอร์เน็ตจริงหรือ intranet ที่ต้องการ
+     เข้ารหัส และต้องเช็คว่า reverse proxy อนุญาต WebSocket upgrade (สำหรับ Socket.IO) ด้วย
+
+8. ทดสอบ flow หลักแบบ manual ก่อนปล่อยจริง (ยังไม่มี automated test ในโปรเจกต์)
+   - สมัคร/login/approve user, สิทธิ์ตาม role (admin/editor/viewer)
+   - หน้า dashboard, dl-eff, pd-input ดึงข้อมูลถูกต้อง
+   - real-time update (Socket.IO) push ข้อมูลอัปเดตขึ้นหน้าจอจริงเมื่อมีการเปลี่ยนแปลงข้อมูล
+
+9. ทบทวนความปลอดภัยของ forgot-password
+   - ตอนนี้ /api/auth/forgot-password เป็น self-service แบบไม่มี email/OTP ยืนยันตัวตน
+     (แค่รู้ username ก็ตั้งรหัสผ่านใหม่ได้เลย) เป็นความเสี่ยงที่ควรพิจารณาก่อนเปิดให้ใช้งานจริง
+     ว่าจะยอมรับความเสี่ยงนี้ หรือต้องเพิ่มการยืนยันตัวตนก่อนขึ้น production
+
+10. เตรียมแผนสำรองข้อมูล (backup) ของฐานข้อมูล SQL Server บนเครื่อง production
+    - ยังไม่มีการระบุ backup schedule/retention ไว้ในโปรเจกต์ ควรตั้งไว้ก่อนมีข้อมูลจริงเข้าระบบ
+
+11. [ทำแล้ว 2026-08-09] เตรียม logging/monitoring พื้นฐาน
+    - เพิ่ม Backend/src/middleware/requestLogger.js: log ทุก request (method, url, status,
+      เวลาที่ใช้) แบบมี timestamp
+    - เพิ่ม endpoint GET /health ใน Backend/src/app.js: เช็คว่าต่อฐานข้อมูลได้จริง (query SELECT 1)
+      คืน { status: 'ok' | 'db_unavailable', uptime } — ใช้กับ uptime monitor/load balancer ได้
+    - error handler เดิมใน app.js เพิ่ม timestamp + method/url เข้าไปใน log แล้ว
+    - เพิ่ม process.on('uncaughtException') และ process.on('unhandledRejection') ใน
+      Backend/index.js: log ข้อผิดพลาดพร้อม timestamp แล้ว exit(1) แทนที่จะปล่อยให้ process
+      ค้างอยู่ในสถานะไม่แน่นอน (ต้องมี process manager ตามข้อ 6 คอยสั่ง restart)
+    - ยังเป็นระดับพื้นฐาน (log ออก console เท่านั้น ยังไม่ได้ต่อ log aggregator/alert เช่น
+      Sentry, Datadog, Windows Event Log) — ถ้าต้องการ monitoring จริงจังกว่านี้ค่อยพิจารณาต่อ

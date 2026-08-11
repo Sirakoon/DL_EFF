@@ -1,22 +1,10 @@
-import { lazy, useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router";
-import LayoutPage from "./components/shared/LayoutPage";
-import Dashborad from "./components/pages/DashBorad";
+import LayoutPage from './components/shared/LayoutPage';
+import { AuthProvider } from './context/AuthContext';
 
-const DashBorad = lazy(() => import("./components/pages/DashBorad"));
-
-function App() {
-  const [count, setCount] = useState(0);
-
+export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<LayoutPage />}>
-          <Route index element={<Dashborad />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <LayoutPage />
+    </AuthProvider>
   );
 }
-
-export default App;
