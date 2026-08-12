@@ -56,7 +56,7 @@ const getAllMachines = async (req, res, next) => {
         is_active,
         updated_at
       FROM dim_machine
-      ORDER BY machine_id
+      ORDER BY updated_at DESC, machine_id DESC
     `);
 
     res.json({

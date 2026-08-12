@@ -203,7 +203,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
       .forEach((k) => { if (form[k] === '' || form[k] == null) e[k] = 'Required'; });
     const rng = (k, lo, hi) => { const n = Number(form[k]); if (form[k] !== '' && (n < lo || n > hi)) e[k] = `${lo}–${hi}`; };
     rng('machine_run_time', 0, 24); rng('std_hc', 0, 25); rng('std_hour', 0, 99);
-    rng('loss_hour', 0, 13); rng('actual_bulk_hr', 0, 13); rng('actual_pallet_hr', 0, 13);
+    rng('loss_hour', 0); rng('actual_bulk_hr', 0, 13); rng('actual_pallet_hr', 0, 13);
     rng('actual_assist_hr', 0, 13); rng('actual_hc', 0, 25);
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -244,7 +244,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
             </h2>
             <p className="text-xs text-gray-400 mt-0.5">Production Data Input</p>
           </div>
-          <button onClick={onClose} className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition">
+          <button onClick={onClose} className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition cursor-pointer">
             <HiXMark className="text-xl" />
           </button>
         </div>

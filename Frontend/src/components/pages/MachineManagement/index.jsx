@@ -18,14 +18,13 @@ export default function MachineManagementPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  const [edit, setEdit] = useState(null);
   const [deleteModel, setDeleteModel] = useState(null);
 
   const canEdit = user && (user.role === "admin" || user.role === "editor");
 
   const PAGE_SIZE = 12;
 
-  const load = useCallback(() => {
+  const fetch = useCallback(() => {
     setLoading(true);
     getMachines()
       .then((res) => {
@@ -38,8 +37,8 @@ export default function MachineManagementPage() {
   console.log(`check machine : `, machines);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    fetch();
+  }, [fetch]);
 
   const filteredData = useMemo(() => {
     return machines.filter((item) => {
@@ -55,6 +54,7 @@ export default function MachineManagementPage() {
   }, [machines, search]);
 
   const handleSaved = () => {
+    setLoading(false);
     setModal(null);
     setDeleteModel(null);
     fetch(true);
@@ -114,8 +114,7 @@ export default function MachineManagementPage() {
               <button
                 type="button"
                 onClick={() => setModal({ mode: "create" })}
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 cursor-pointer border border-gray-200
-              `}
+                className={`h-10 flex items-center gap-2 px-6 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-md shadow-emerald-200 cursor-pointer`}
               >
                 Add Machine
               </button>
@@ -140,13 +139,13 @@ export default function MachineManagementPage() {
                     Machine Code
                   </th>
                   <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
-                    oee_target
+                    oee target
                   </th>
                   <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                     version
                   </th>
                   <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
-                    is_active
+                    status
                   </th>
                   {canEdit && (
                     <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
@@ -159,7 +158,11 @@ export default function MachineManagementPage() {
                 {machinesData.map((e, i) => (
                   <tr
                     key={e.machines_id}
-                    className="hover:bg-blue-50/30 transition-colors"
+                    className={`hover:bg-blue-50/30 transition-colors ${
+                      e.is_active
+                        ? "bg-teal-100/10  "
+                        : "bg-gray-400/30 "
+                    }`}
                   >
                     <td className="px-4 py-3 text-xs text-gray-900 tabular-nums">
                       {(page - 1) * PAGE_SIZE + i + 1}
@@ -178,18 +181,20 @@ export default function MachineManagementPage() {
                       <span
                         className={`text-[11px] font-bold px-2 py-0.5 rounded-full `}
                       >
-                        {e.versoin ? e.versoin : "-"}
+                        {e.version ? e.version : "-"}
                       </span>
                     </td>
-                    <td className="px-6 py-3">
+                    <td
+                      className={`px-6 py-3 `}
+                    >
                       <span
                         className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
                           e.is_active
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-500"
+                            ? "bg-green-100 text-green-700 border border-green-300"
+                            : "bg-gray-100 text-gray-500 border-gray-300"
                         }`}
                       >
-                        {e.is_active ? "active" : "not active"}
+                        {e.is_active ? "active" : "disable"}
                       </span>
                       {/* <span
                         className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${STATUS_BADGE[u.status]}`}
@@ -197,30 +202,26 @@ export default function MachineManagementPage() {
                         {u.is_active}
                       </span> */}
                     </td>
-                    <div className="">
-                      {canEdit && (
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() =>
-                                setModal({ mode: "edit", data: e })
-                              }
-                              title="Edit"
-                              className="w-8 h-8 flex items-center justify-center text-blue-500 hover:bg-blue-100 rounded-lg transition"
-                            >
-                              <HiPencilSquare className="text-base" />
-                            </button>
-                            <button
-                              onClick={() => setDeleteModel(e)}
-                              title="Delete"
-                              className="w-8 h-8 flex items-center justify-center text-red-400 hover:bg-red-100 rounded-lg transition"
-                            >
-                              <HiTrash className="text-base" />
-                            </button>
-                          </div>
-                        </td>
-                      )}
-                    </div>
+                    {canEdit && (
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setModal({ mode: "edit", data: e })}
+                            title="Edit"
+                            className="w-8 h-8 flex items-center justify-center text-blue-500 hover:bg-blue-100 rounded-lg transition"
+                          >
+                            <HiPencilSquare className="text-base" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteModel(e)}
+                            title="Delete"
+                            className="w-8 h-8 flex items-center justify-center text-red-400 hover:bg-red-100 rounded-lg transition"
+                          >
+                            <HiTrash className="text-base" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -241,7 +242,7 @@ export default function MachineManagementPage() {
                   (_, index) => index + 1,
                 ).map((p) => (
                   <button
-                    key={page}
+                    key={p}
                     type="button"
                     onClick={() => setPage(p)}
                     className={`w-8 h-8 rounded-lg text-xs font-bold cursor-pointer transition

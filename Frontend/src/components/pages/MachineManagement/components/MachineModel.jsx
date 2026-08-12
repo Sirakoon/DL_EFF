@@ -1,10 +1,5 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
-import {
-  HiXMark,
-  HiCheck,
-  HiExclamationCircle,
-  HiLockClosed,
-} from "react-icons/hi2";
+import { useEffect, useState, useCallback } from "react";
+import { HiXMark, HiCheck, HiExclamationCircle } from "react-icons/hi2";
 import { TbLoader2 } from "react-icons/tb";
 import { createMachines, updateMachines } from "../../../../services/api";
 import { toast } from "../../../../lib/toast";
@@ -46,10 +41,10 @@ function Field({ label, required, hint, error, children }) {
 }
 
 const inputBase =
-  "w-full h-10 border rounded-xl px-3 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400";
+  "w-full h-10 border-2 border-gray-300 rounded-xl px-3 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400";
 const inputNormal = `${inputBase} bg-white text-gray-800 border-gray-200 hover:border-gray-300`;
 const inputError = `${inputBase} bg-white text-gray-800 border-red-300 ring-2 ring-red-200`;
-const inputRO = `${inputBase} bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed select-none`;
+const inputRO = `${inputBase} bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed select-none `;
 
 function TInput({
   value,
@@ -74,7 +69,6 @@ function TInput({
     />
   );
 }
-
 
 const SECTION_COLOR_SCHEME = {
   blue: "bg-blue-600 text-blue-700 border-blue-100",
@@ -101,18 +95,10 @@ function SectionHead({ color, edit, close }) {
 
       <button
         onClick={close}
-        className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
+        className="cursor-pointer w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
       >
         <HiXMark className="text-xl" />
       </button>
-    </div>
-  );
-}
-
-function SubLabel({ children }) {
-  return (
-    <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-      {children}
     </div>
   );
 }
@@ -143,7 +129,7 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
 
   const validate = () => {
     const e = {};
-    ["machine_code", "oee_target", "version", "is_active"].forEach((k) => {
+    ["machine_code", "oee_target", "is_active"].forEach((k) => {
       if (form[k] === "" || form[k] == null) e[k] = "Required";
     });
     const rng = (k, lo, hi) => {
@@ -151,6 +137,7 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
       if (form[k] !== "" && (n < lo || n > hi)) e[k] = `${lo}–${hi}`;
     };
     rng("machine_code", 0);
+    rng("oee_target", 0, 1);
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -161,7 +148,7 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
     try {
       const payload = { ...form };
       delete payload.product_group;
-      if (isEdit) await updateMachines(initialData.record_id, payload);
+      if (isEdit) await updateMachines(initialData.machine_id, payload);
       else await createMachines(payload);
       toast.success(
         isEdit ? "Record updated successfully" : "Record created successfully",
@@ -187,7 +174,7 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
         <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 flex-shrink-0"></div>
         <SectionHead
           label="Edit Machine"
-          color={isEdit ? "emerald" : "amber"}
+          color={isEdit ? "amber" : "emerald"}
           edit={isEdit}
           close={onClose}
         />
@@ -201,25 +188,16 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
                 <Field
                   label="Machine Code"
                   required
-                  //   hint="hr · 0–24"
                   error={errors.machine_code}
                 >
                   <TInput
                     type="text"
                     value={form.machine_code}
                     onChange={set("machine_code")}
-                    // step="0.1"
-                    // min={0}
-                    // max={24}
                     hasError={!!errors.machine_code}
                   />
                 </Field>
-                <Field
-                  label="OEE Target"
-                  required
-                  //   hint="≥ 0"
-                  error={errors.oee_target}
-                >
+                <Field label="OEE Target" required error={errors.oee_target}>
                   <TInput
                     type="number"
                     value={form.oee_target}
@@ -230,36 +208,46 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
                     hasError={!!errors.oee_target}
                   />
                 </Field>
-                <Field
-                  label="Version"
-                  required
-                  //   hint="≥ 0"
-                //   error={errors.version}
-                >
-                  <TInput
-                    type="text"
-                    value={form.version}
-                    onChange={set("version")}
-                    // hasError={!!errors.version}
-                  />
-                </Field>
-                {/* <Field
-                  label="Ac"
-                  required
-                  hint="integer"
-                  error={errors.is_active}
-                >
-                  <button className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-green-100 text-green-700">Active</button>
-                  <button className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-gray-100 text-gray-500">Not Active</button>
+                <Field label="Version">
                   <TInput
                     type="number"
-                    value={form.is_active}
-                    onChange={set("is_active")}
-                    step="1"
-                    min={0}
-                    hasError={!!errors.is_active}
+                    value={form.version}
+                    onChange={set("version")}
+                    hasError={!!errors.version}
                   />
-                </Field> */}
+                </Field>
+                {isEdit ? (
+                  <Field label="Status" required error={errors.is_active}>
+                    <div className="flex items-center gap-4">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm((prev) => ({
+                            ...prev,
+                            is_active: Number(prev.is_active) === 1 ? 0 : 1,
+                          }))
+                        }
+                        className={` relative h-6 w-16 rounded-full transition-all duration-800 cursor-pointer
+                                  ${Number(form.is_active) === 1 ? "bg-teal-500" : "bg-gray-300"}
+                                `}
+                      >
+                        <span
+                          className={`absolute inset-0 flex items-center text-sm font-bold tracking-wider text-white
+                                    ${Number(form.is_active) === 1 ? "justify-start pl-2" : "justify-end pr-2"}
+                                  `}
+                        >
+                          {Number(form.is_active) === 1 ? "ON" : "OFF"}
+                        </span>
+                        <span
+                          className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-md transition-all duration-1000 ${Number(form.is_active) === 1 ? "left-11" : "left-1"}`}
+                        />
+                      </button>
+                      <span className="text-[14px] font-bold transition-all duration-500 text-gray-600">{form.is_active == 1 ? "Active " : "Disable"}</span>
+                    </div>
+                  </Field>
+                ) : (
+                  <></>
+                )}
               </div>
             </div>
           </div>
