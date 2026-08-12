@@ -123,7 +123,6 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
     });
     return map;
   }, [machineProductGroups]);
-  console.log("check product : ", groupsByMachine )
 
  
 
@@ -140,7 +139,6 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
   if (!checkMachine) {
     return [];
   }
-  console.log(`check machine : ${checkMachine}`)
   return Array.from(groupsByMachine.get(checkMachine) || []);
 }, [checkMachine, groupsByMachine]);
   
@@ -356,7 +354,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
               <div>
                 <SectionHead label="Loss Hours" color="amber" />
                 <div className="grid grid-cols-2 gap-x-4 gap-y-0">
-                  <Field label="Loss Hour" required hint="0–13" error={errors.loss_hour}>
+                  <Field label="Loss Hour" required hint="≥ 0" error={errors.loss_hour}>
                     <TInput type="number" value={form.loss_hour} onChange={set('loss_hour')} step="0.01" min={0} max={13} hasError={!!errors.loss_hour} />
                   </Field>
                   <Field label="Bulk (Hr)" hint="0–13" error={errors.actual_bulk_hr}>

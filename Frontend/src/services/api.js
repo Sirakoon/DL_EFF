@@ -48,6 +48,12 @@ export const createPdInput = (body) => fetchJSON('/pd-input', { method: 'POST', 
 export const updatePdInput = (id, body) => fetchJSON(`/pd-input/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 export const deletePdInput = (id) => fetchJSON(`/pd-input/${id}`, { method: 'DELETE' });
 
+/* ── Machines — CRUD ────────────────────────────────────────────── */
+export const getMachines = () => fetchJSON('/machine');
+export const createMachines = (body) => fetchJSON('/machine', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+export const updateMachines = (id, body) => fetchJSON(`/machine/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+export const deleteMachines = (id) => fetchJSON(`/machine/${id}`, { method: 'DELETE' });
+
 /* ── Auth ───────────────────────────────────────────────────────── */
 export const authRegister = (body) => fetchJSON('/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 export const authLogin = (body) => fetchJSON('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });

@@ -12,6 +12,12 @@ export const NAV_SECTIONS = [
     ],
   },
   {
+    label: 'Config management',
+    items: [
+      { key: 'pd-machine', label: 'Machine Management', icon: 'machine' },
+    ],
+  },
+  {
     label: 'Administration',
     adminOnly: true,
     items: [
