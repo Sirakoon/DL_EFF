@@ -158,10 +158,10 @@ export default function MachineManagementPage() {
                 {machinesData.map((e, i) => (
                   <tr
                     key={e.machines_id}
-                    className={`hover:bg-blue-50/30 transition-colors ${
+                    className={` transition-colors ${
                       e.is_active
-                        ? "bg-teal-100/10  "
-                        : "bg-gray-400/30 "
+                        ? "bg-teal-100/10 hover:bg-teal-100/30"
+                        : "bg-gray-200/70 hover:bg-gray-300/60"
                     }`}
                   >
                     <td className="px-4 py-3 text-xs text-gray-900 tabular-nums">
@@ -191,7 +191,7 @@ export default function MachineManagementPage() {
                         className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
                           e.is_active
                             ? "bg-green-100 text-green-700 border border-green-300"
-                            : "bg-gray-100 text-gray-500 border-gray-300"
+                            : "bg-gray-300 text-gray-700 border-gray-700"
                         }`}
                       >
                         {e.is_active ? "active" : "disable"}

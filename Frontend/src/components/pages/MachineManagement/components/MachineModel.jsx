@@ -103,6 +103,98 @@ function SectionHead({ color, edit, close }) {
   );
 }
 
+/* ── primitives ─────────────────────────────────────────────────── */
+function PopupProductGroup({isOpen,onClose,optionsList,selectedItems,onSelect}) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/50 px-4 backdrop-blur-sm transition-opacity">
+      {/* Popup */}
+      <div className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <h3 className="text-lg font-bold text-gray-800">
+            Select Product Group
+          </h3>
+          <button
+            type="button"
+            onClick={() => onClose}
+            className="text-gray-400 hover:text-gray-600 focus:outline-none"
+          >
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/*ฺ Body */}
+        <div className="max-h-[50vh] overflow-y-auto px-2 py-2">
+          {optionsList.map((option, index) => {
+            const isSelected = (selectedItems || []).includes(option);
+            return (
+              <label
+                key={index}
+                className="flex cursor-pointer items-center justify-between rounded-lg px-4 py-3 hover:bg-gray-50 transition-colors"
+              >
+                <span
+                  className={`text-sm ${isSelected ? "font-semibold text-blue-700" : "text-gray-700"}`}
+                >
+                  {option}
+                </span>
+                <div
+                  className={`flex h-5 w-5 items-center justify-center rounded border ${isSelected ? "border-blue-600 bg-blue-600" : "border-gray-300 bg-white"}`}
+                >
+                  {isSelected && (
+                    <svg
+                      className="h-3.5 w-3.5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="3"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <input
+                  type="checkbox"
+                  className="hidden"
+                  checked={isSelected}
+                  onChange={() => onSelect(option)}
+                />
+              </label>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-gray-100 bg-gray-50 px-6 py-4 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 active:scale-95"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════════════════════ */
 export default function MachineModal({ mode, initialData, onClose, onSaved }) {
   const isEdit = mode === "edit";
@@ -110,6 +202,24 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
   const [form, setForm] = useState(getEmptyForm);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // const productGroupList = ["Machine A", "Machine B", "Machine C", "Machine D"];
+
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const optionsList = [
+    "Machine A",
+    "Machine B",
+    "Machine C",
+    "Machine D",
+    "Machine E",
+    "Machine F",
+    "Machine G",
+    "Machine AB",
+    "Machine GD",
+    "Machine GT",
+    "Machine GQ",
+    "Machine GW",
+  ];
 
   useEffect(() => {
     if (isEdit && initialData) {
@@ -142,6 +252,31 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
     return Object.keys(e).length === 0;
   };
 
+  const handleSelect = (option) => {
+    setForm((prev) => {
+      const currentSelected = prev.selected_items || [];
+      if (currentSelected.includes(option)) {
+        return {
+          ...prev,
+          selected_items: currentSelected.filter((item) => item !== option),
+        };
+      }
+      return {
+        ...prev,
+        selected_items: [...currentSelected, option],
+      };
+    });
+  };
+
+  const handleRemove = (optionToRemove) => {
+    setForm((prev) => ({
+      ...prev,
+      selected_items: prev.selected_items.filter(
+        (item) => item !== optionToRemove,
+      ),
+    }));
+  };
+
   const handleSave = async () => {
     if (!validate()) return;
     setSaving(true);
@@ -170,7 +305,6 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden">
-        {/* ── Header ── */}
         <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 flex-shrink-0"></div>
         <SectionHead
           label="Edit Machine"
@@ -179,10 +313,8 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
           close={onClose}
         />
 
-        {/* ── Body ── */}
-        <div className="overflow-y-auto flex-1 px-6 py-5">
+        <div className="overflow-y-auto flex-1 px-6 py-5 ">
           <div className="space-y-5">
-            {/* Production Data */}
             <div>
               <div className="grid gap-x-4 gap-y-0">
                 <Field
@@ -216,6 +348,71 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
                     hasError={!!errors.version}
                   />
                 </Field>
+                <Field label="Custom Multi-Select" required>
+                  <button
+                    type="button"
+                    onClick={() => setIsPopupOpen(true)}
+                    className="flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm transition-colors hover:bg-gray-50 focus:border-blue-500 focus:outline-none"
+                  >
+                    <span
+                      className={
+                        form.selected_items?.length > 0
+                          ? "text-gray-800 font-medium"
+                          : "text-gray-500"
+                      }
+                    >
+                      {form.selected_items?.length > 0
+                        ? `Selected ${form.selected_items.length} Product Group`
+                        : "Click to select Product Group..."}
+                    </span>
+                    {/* ไอคอนแก้ไข หรือ ลูกศร */}
+                    <svg
+                      className="h-4 w-4 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* 2. แสดง Tag ด้านล่างปุ่ม */}
+                  {form.selected_items && form.selected_items.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {form.selected_items.map((item, index) => (
+                        <span
+                          key={index}
+                          className="flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-[13px] font-medium text-blue-700 shadow-sm"
+                        >
+                          {item}
+                          <button
+                            type="button"
+                            onClick={() => handleRemove(item)}
+                            className="ml-1 flex h-4 w-4 items-center justify-center rounded-full hover:bg-blue-200 text-blue-500 hover:text-blue-800 focus:outline-none transition-colors"
+                          >
+                            &times;
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Popup Modal (จะลอยอยู่เหนือสุดของหน้าจอ) */}
+                  {isPopupOpen && (
+                    <PopupProductGroup
+                      isOpen={isPopupOpen}
+                      onClose={() => setIsPopupOpen(false)}
+                      optionsList={optionsList}
+                      selectedItems={form.selected_items}
+                      onSelect={handleSelect}
+                    />
+                  )}
+                </Field>
                 {isEdit ? (
                   <Field label="Status" required error={errors.is_active}>
                     <div className="flex items-center gap-4">
@@ -242,7 +439,9 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
                           className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-md transition-all duration-1000 ${Number(form.is_active) === 1 ? "left-11" : "left-1"}`}
                         />
                       </button>
-                      <span className="text-[14px] font-bold transition-all duration-500 text-gray-600">{form.is_active == 1 ? "Active " : "Disable"}</span>
+                      <span className="text-[14px] font-bold transition-all duration-500 text-gray-600">
+                        {form.is_active == 1 ? "Active " : "Disable"}
+                      </span>
                     </div>
                   </Field>
                 ) : (
@@ -268,7 +467,7 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
         </div>
 
         {/* ── Footer ── */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex-shrink-0 z-0">
           <button
             onClick={onClose}
             className="px-5 py-2.5 text-sm font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-100 transition cursor-pointer"
