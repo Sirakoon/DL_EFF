@@ -5,6 +5,7 @@ import {
   HiChevronLeft,
   HiChevronRight,
   HiUserGroup,
+  HiCpuChip
 } from "react-icons/hi2";
 import { TbActivityHeartbeat, TbDatabase } from "react-icons/tb";
 import { BiSolidFactory } from "react-icons/bi";
@@ -15,6 +16,7 @@ const ICONS = {
   "bar-chart": <HiChartBarSquare className="w-5 h-5" />,
   table: <HiTableCells className="w-5 h-5" />,
   users: <HiUserGroup className="w-5 h-5" />,
+  machine: <HiCpuChip className="w-5 h-5" />,
 };
 
 export default function Sidebar({

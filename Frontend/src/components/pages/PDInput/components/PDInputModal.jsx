@@ -105,6 +105,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [checkMachine, setCheckMachine] = useState(null);
 
   const selectedMachine = machines.find((m) => m.machine_code === form.machine_code);
   const selectedProduct = products.find((p) => p.product_code === form.product_code);
@@ -123,18 +124,28 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
     return map;
   }, [machineProductGroups]);
 
+ 
+
   // groups known for the selected machine; null/empty means "not learned yet" — fall back to showing all
   const machineGroups = form.machine_code ? groupsByMachine.get(form.machine_code) : null;
 
-  const productGroups = useMemo(() => (
-    machineGroups && machineGroups.size > 0
-      ? allProductGroups.filter((g) => machineGroups.has(g))
-      : allProductGroups
-  ), [allProductGroups, machineGroups]);
+  // const productGroups = useMemo(() => (
+  //   machineGroups && machineGroups.size > 0
+  //     ? allProductGroups.filter((g) => machineGroups.has(g))
+  //     : allProductGroups
+  // ), [allProductGroups, machineGroups])
 
+  const productGroups = useMemo(() => {
+  if (!checkMachine) {
+    return [];
+  }
+  return Array.from(groupsByMachine.get(checkMachine) || []);
+}, [checkMachine, groupsByMachine]);
+  
+  
   const filteredProducts = useMemo(() =>
     form.product_group ? products.filter((p) => p.product_group_name === form.product_group) : []
-    , [products, form.product_group]);
+  , [products, form.product_group]);
 
   useEffect(() => {
     Promise.all([getMasterMachines(), getMasterProducts(), getMasterShifts(), getMasterMachineProductGroups()])
@@ -178,6 +189,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
     const machine_code = e.target.value;
     const groups = machine_code ? groupsByMachine.get(machine_code) : null;
     const groupStillValid = !groups || groups.size === 0 || groups.has(form.product_group);
+    setCheckMachine(machine_code)
     setForm((f) => (
       groupStillValid
         ? { ...f, machine_code }
@@ -192,7 +204,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
       .forEach((k) => { if (form[k] === '' || form[k] == null) e[k] = 'Required'; });
     const rng = (k, lo, hi) => { const n = Number(form[k]); if (form[k] !== '' && (n < lo || n > hi)) e[k] = `${lo}–${hi}`; };
     rng('machine_run_time', 0, 24); rng('std_hc', 0, 25); rng('std_hour', 0, 99);
-    rng('loss_hour', 0, 13); rng('actual_bulk_hr', 0, 13); rng('actual_pallet_hr', 0, 13);
+    rng('loss_hour', 0); rng('actual_bulk_hr', 0, 13); rng('actual_pallet_hr', 0, 13);
     rng('actual_assist_hr', 0, 13); rng('actual_hc', 0, 25);
     if (form.loss_reason && form.loss_reason.length > 200) e.loss_reason = 'Max 200 characters';
     setErrors(e);
@@ -234,7 +246,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
             </h2>
             <p className="text-xs text-gray-400 mt-0.5">Production Data Input</p>
           </div>
-          <button onClick={onClose} className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition">
+          <button onClick={onClose} className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition cursor-pointer">
             <HiXMark className="text-xl" />
           </button>
         </div>
@@ -286,7 +298,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                     label="Product Group" required error={errors.product_group}
                     hint={machineGroups && machineGroups.size > 0 ? '· filtered by machine' : ''}
                   >
-                    <TSelect value={form.product_group} onChange={handleGroupChange} hasError={!!errors.product_group}>
+                    <TSelect value={form.product_group} disabled={!form.machine_code} onChange={handleGroupChange} hasError={!!errors.product_group}>
                       <option value="">Select Product Group</option>
                       {productGroups.map((g) => <option key={g} value={g}>{g}</option>)}
                     </TSelect>
@@ -344,7 +356,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
               <div>
                 <SectionHead label="Loss Hours" color="amber" />
                 <div className="grid grid-cols-2 gap-x-4 gap-y-0">
-                  <Field label="Loss Hour" required hint="0–13" error={errors.loss_hour}>
+                  <Field label="Loss Hour" required hint="≥ 0" error={errors.loss_hour}>
                     <TInput type="number" value={form.loss_hour} onChange={set('loss_hour')} step="0.01" min={0} max={13} hasError={!!errors.loss_hour} />
                   </Field>
                   <Field label="Bulk (Hr)" hint="0–13" error={errors.actual_bulk_hr}>

@@ -4,6 +4,7 @@ import Header from './Header';
 import AuthModal from './AuthModal';
 import { ToastContainer } from './Toast';
 import { useAuth } from '../../context/AuthContext';
+import MachineManagementPage from '../pages/MachineManagement';
 
 const DlEffDashboard = lazy(() => import('../pages/DlEff/index'));
 const PDInputPage = lazy(() => import('../pages/PDInput/index'));
@@ -12,6 +13,7 @@ const UserManagementPage = lazy(() => import('../pages/UserManagement/index'));
 const PAGE_META = {
   'dl-eff': { title: 'DL Efficiency Dashboard', subtitle: 'Direct Labour Efficiency · Gown / Drape / CWC' },
   'pd-input': { title: 'Data Input', subtitle: 'Production record management' },
+  'pd-machine': { title: 'Machine', subtitle: 'Machine management' },
   'user-management': { title: 'User Management', subtitle: 'Approve registrations · reset passwords' },
 };
 
@@ -53,6 +55,7 @@ export default function LayoutPage() {
           }>
             {activeKey === 'dl-eff' && <DlEffDashboard />}
             {activeKey === 'pd-input' && <PDInputPage />}
+            {activeKey === 'pd-machine' && <MachineManagementPage />}
             {activeKey === 'user-management' && isAdmin && <UserManagementPage />}
           </Suspense>
         </main>

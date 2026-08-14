@@ -7,6 +7,7 @@ const dashboardRoutes = require('./routes/dashboard');
 const dlEffRoutes = require('./routes/dlEff');
 const pdInputRoutes = require('./routes/pdInput');
 const authRoutes = require('./routes/auth');
+const machineRoutes = require('./routes/machine')
 
 const app = express();
 app.use(express.json());
@@ -30,6 +31,7 @@ app.get('/health', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/dl-eff', dlEffRoutes);
+app.use('/api/machine', machineRoutes);
 app.use('/api/pd-input', pdInputRoutes);
 
 app.use((err, req, res, next) => {
