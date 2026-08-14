@@ -10,3 +10,12 @@ export const daysAgoStr = (n) => {
   d.setDate(d.getDate() - n);
   return toDateStr(d);
 };
+
+const MONTHS_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// 'YYYY-MM-DD' -> 'dd-Mon-yyyy' (e.g. '2026-08-07' -> '07-Aug-2026')
+export const fmtDMY = (iso) => {
+  if (!iso) return '';
+  const [y, m, d] = iso.slice(0, 10).split('-');
+  return `${d}-${MONTHS_ABBR[+m - 1]}-${y}`;
+};

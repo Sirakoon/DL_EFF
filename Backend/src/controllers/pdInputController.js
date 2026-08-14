@@ -35,6 +35,8 @@ function validateBody(body) {
   rng('actual_bulk_hr', 0, 13);
   rng('actual_pallet_hr', 0, 13);
   rng('actual_assist_hr', 0, 13);
+  if (body.loss_reason != null && String(body.loss_reason).length > 200)
+    errors.push('loss_reason must be 200 characters or fewer');
   return errors;
 }
 
@@ -171,7 +173,7 @@ const create = async (req, res, next) => {
     const {
       production_date, shift_code, machine_code, product_code,
       machine_run_time, std_hc, std_hour, hour_piece_rate,
-      actual_output, loss_hour, actual_hc,
+      actual_output, loss_hour, loss_reason = null, actual_hc,
       actual_bulk_hr = 0, actual_pallet_hr = 0, actual_assist_hr = 0,
       created_by = null,
     } = req.body;
@@ -188,6 +190,7 @@ const create = async (req, res, next) => {
       .input('hour_piece_rate', sql.Decimal(6, 2), hour_piece_rate)
       .input('actual_output', sql.BigInt, actual_output)
       .input('loss_hour', sql.Decimal(5, 2), loss_hour)
+      .input('loss_reason', sql.NVarChar(200), loss_reason || null)
       .input('actual_bulk_hr', sql.Decimal(5, 2), actual_bulk_hr)
       .input('actual_pallet_hr', sql.Decimal(5, 2), actual_pallet_hr)
       .input('actual_assist_hr', sql.Decimal(5, 2), actual_assist_hr)
@@ -206,6 +209,7 @@ const create = async (req, res, next) => {
           @hour_piece_rate  = @hour_piece_rate,
           @actual_output    = @actual_output,
           @loss_hour        = @loss_hour,
+          @loss_reason      = @loss_reason,
           @actual_bulk_hr   = @actual_bulk_hr,
           @actual_pallet_hr = @actual_pallet_hr,
           @actual_assist_hr = @actual_assist_hr,
@@ -230,7 +234,7 @@ const update = async (req, res, next) => {
     const { id } = req.params;
     const {
       production_date, shift_code, machine_run_time, std_hc, std_hour,
-      hour_piece_rate, actual_output, loss_hour, actual_hc,
+      hour_piece_rate, actual_output, loss_hour, loss_reason = null, actual_hc,
       actual_bulk_hr = 0, actual_pallet_hr = 0, actual_assist_hr = 0,
     } = req.body;
     const updated_by = req.user.username;
@@ -246,6 +250,7 @@ const update = async (req, res, next) => {
       .input('hour_piece_rate', sql.Decimal(6, 2), hour_piece_rate)
       .input('actual_output', sql.BigInt, actual_output)
       .input('loss_hour', sql.Decimal(5, 2), loss_hour)
+      .input('loss_reason', sql.NVarChar(200), loss_reason || null)
       .input('actual_bulk_hr', sql.Decimal(5, 2), actual_bulk_hr)
       .input('actual_pallet_hr', sql.Decimal(5, 2), actual_pallet_hr)
       .input('actual_assist_hr', sql.Decimal(5, 2), actual_assist_hr)
@@ -261,6 +266,7 @@ const update = async (req, res, next) => {
           hour_piece_rate  = @hour_piece_rate,
           actual_output    = @actual_output,
           loss_hour        = @loss_hour,
+          loss_reason      = @loss_reason,
           actual_bulk_hr   = @actual_bulk_hr,
           actual_pallet_hr = @actual_pallet_hr,
           actual_assist_hr = @actual_assist_hr,
@@ -340,7 +346,7 @@ const exportCsv = async (req, res, next) => {
         product_group_name, product_code, product_description,
         mc_speed_pcs_hr, oee_target,
         machine_run_time, std_hc, std_hour, hour_piece_rate,
-        actual_output, loss_hour, actual_bulk_hr, actual_pallet_hr, actual_assist_hr, actual_hc,
+        actual_output, loss_hour, loss_reason, actual_bulk_hr, actual_pallet_hr, actual_assist_hr, actual_hc,
         cal_output_at_oee, std_output,
         productivity_std_pcs_mh, actual_hour, productivity_ac_pcs_mh,
         ROUND(dl_eff_percent, 2) AS dl_eff_percent,

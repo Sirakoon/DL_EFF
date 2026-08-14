@@ -25,6 +25,7 @@ import PDInputModal from "./components/PDInputModal";
 import DeleteConfirm from "./components/DeleteConfirm";
 import { todayStr as today, daysAgoStr as daysAgo } from "../../../utils/date";
 import Selected from "../../shared/Selected";
+import DatePicker from "../../shared/DatePicker";
 
 const PAGE_SIZE = 10;
 const MONTHS = [
@@ -296,15 +297,14 @@ export default function PDInputPage() {
               <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wide mb-1.5">
                 Date From
               </label>
-              <input
-                type="date"
+              <DatePicker
+                className="w-36"
                 value={dateFrom}
                 max={dateTo}
-                onChange={(e) => {
+                onChange={(v) => {
                   setPage(1);
-                  setDateFrom(e.target.value);
+                  setDateFrom(v);
                 }}
-                className="h-10 border border-gray-200 rounded-xl px-3 text-sm text-gray-700 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition "
               />
             </div>
             <span className="text-gray-600 font-bold mb-2">→</span>
@@ -312,16 +312,15 @@ export default function PDInputPage() {
               <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wide mb-1.5">
                 Date To
               </label>
-              <input
-                type="date"
+              <DatePicker
+                className="w-36"
                 value={dateTo}
                 min={dateFrom}
                 max={today()}
-                onChange={(e) => {
+                onChange={(v) => {
                   setPage(1);
-                  setDateTo(e.target.value);
+                  setDateTo(v);
                 }}
-                className="h-10 border border-gray-200 rounded-xl px-3 text-sm text-gray-700 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition "
               />
             </div>
           </div>
@@ -498,6 +497,7 @@ export default function PDInputPage() {
                   <Th right>Actual HC</Th>
                   <Th right>Actual Output</Th>
                   <Th right>Loss Hr</Th>
+                  <Th>Loss Reason</Th>
                   <Th right>Prod STD</Th>
                   <Th right>Prod AC</Th>
                   <Th right>DL Eff %</Th>
@@ -559,6 +559,9 @@ export default function PDInputPage() {
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums text-gray-500">
                       {num(row.loss_hour)}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-500 max-w-[160px] truncate" title={row.loss_reason ?? ''}>
+                      {row.loss_reason || "—"}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums text-gray-500">
                       {num(row.productivity_std_pcs_mh)}

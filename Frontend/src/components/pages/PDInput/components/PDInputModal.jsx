@@ -11,7 +11,7 @@ import { todayStr } from '../../../../utils/date';
 const getEmptyForm = () => ({
   production_date: todayStr(), shift_code: '', machine_code: '', product_group: '',
   product_code: '', machine_run_time: '', std_hc: '', std_hour: '',
-  hour_piece_rate: '', actual_output: '', loss_hour: '', actual_hc: '',
+  hour_piece_rate: '', actual_output: '', loss_hour: '', loss_reason: '', actual_hc: '',
   actual_bulk_hr: '0', actual_pallet_hr: '0', actual_assist_hr: '0',
 });
 
@@ -162,6 +162,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
         hour_piece_rate: initialData.hour_piece_rate ?? '',
         actual_output: initialData.actual_output ?? '',
         loss_hour: initialData.loss_hour ?? '',
+        loss_reason: initialData.loss_reason ?? '',
         actual_hc: initialData.actual_hc ?? '',
         actual_bulk_hr: initialData.actual_bulk_hr ?? '0',
         actual_pallet_hr: initialData.actual_pallet_hr ?? '0',
@@ -193,6 +194,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
     rng('machine_run_time', 0, 24); rng('std_hc', 0, 25); rng('std_hour', 0, 99);
     rng('loss_hour', 0, 13); rng('actual_bulk_hr', 0, 13); rng('actual_pallet_hr', 0, 13);
     rng('actual_assist_hr', 0, 13); rng('actual_hc', 0, 25);
+    if (form.loss_reason && form.loss_reason.length > 200) e.loss_reason = 'Max 200 characters';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -249,7 +251,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
 
               {/* Basic Info */}
               <div>
-                <SectionHead label="Basic Info" color="blue" />
+                <SectionHead label="Info" color="blue" />
                 <div className="grid grid-cols-2 gap-x-4 gap-y-0">
                   {/* row 1 */}
                   <Field label="Production Date" required error={errors.production_date}>
@@ -354,6 +356,11 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                   <Field label="Assist (Hr)" hint="0–13" error={errors.actual_assist_hr}>
                     <TInput type="number" value={form.actual_assist_hr} onChange={set('actual_assist_hr')} step="0.01" min={0} max={13} hasError={!!errors.actual_assist_hr} />
                   </Field>
+                  <div className="col-span-2">
+                    <Field label="Loss Reason" hint="optional · what caused the loss hours" error={errors.loss_reason}>
+                      <TInput value={form.loss_reason} onChange={set('loss_reason')} hasError={!!errors.loss_reason} />
+                    </Field>
+                  </div>
                 </div>
               </div>
 

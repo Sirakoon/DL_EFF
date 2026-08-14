@@ -18,6 +18,7 @@ import { toast } from "../../../lib/toast";
 import { useAutoRefresh } from "../../../hooks/useAutoRefresh";
 import { todayStr as today, daysAgoStr as daysAgo } from "../../../utils/date";
 import ProjectProgress from "./components/DlEffChart";
+import DatePicker from "../../shared/DatePicker";
 
 const PERIODS = [
   { key: "daily", label: "Daily", Icon: MdToday },
@@ -386,19 +387,18 @@ export default function DlEffDashboard() {
             </button>
           ))}
         </div>
-        <div className="bg-white rounded-b-3xl rounded-tr-3xl  border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-b-3xl rounded-tr-3xl  border border-gray-200 shadow-sm">
           <div className="flex flex-wrap items-end gap-4 px-6 py-4">
             <div className="flex items-end gap-2">
               <div>
                 <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wide mb-1.5">
                   Date From
                 </label>
-                <input
-                  type="date"
+                <DatePicker
+                  className="w-36"
                   value={dateFrom}
                   max={dateTo}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="h-10 border border-gray-200 rounded-xl px-3 text-sm text-gray-700 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
+                  onChange={(v) => setDateFrom(v)}
                 />
               </div>
               <span className="text-gray-300 font-bold mb-2.5">→</span>
@@ -406,13 +406,12 @@ export default function DlEffDashboard() {
                 <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wide mb-1.5">
                   Date To
                 </label>
-                <input
-                  type="date"
+                <DatePicker
+                  className="w-36"
                   value={dateTo}
                   min={dateFrom}
                   max={today()}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="h-10 border border-gray-200 rounded-xl px-3 text-sm text-gray-700 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition"
+                  onChange={(v) => setDateTo(v)}
                 />
               </div>
             </div>
