@@ -348,7 +348,7 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
                     hasError={!!errors.version}
                   />
                 </Field>
-                <Field label="Custom Multi-Select" required>
+                {/*<Field label="Custom Multi-Select" required>
                   <button
                     type="button"
                     onClick={() => setIsPopupOpen(true)}
@@ -365,7 +365,6 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
                         ? `Selected ${form.selected_items.length} Product Group`
                         : "Click to select Product Group..."}
                     </span>
-                    {/* ไอคอนแก้ไข หรือ ลูกศร */}
                     <svg
                       className="h-4 w-4 text-gray-500"
                       fill="none"
@@ -381,7 +380,6 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
                     </svg>
                   </button>
 
-                  {/* 2. แสดง Tag ด้านล่างปุ่ม */}
                   {form.selected_items && form.selected_items.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {form.selected_items.map((item, index) => (
@@ -401,8 +399,6 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
                       ))}
                     </div>
                   )}
-
-                  {/* Popup Modal (จะลอยอยู่เหนือสุดของหน้าจอ) */}
                   {isPopupOpen && (
                     <PopupProductGroup
                       isOpen={isPopupOpen}
@@ -412,7 +408,7 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
                       onSelect={handleSelect}
                     />
                   )}
-                </Field>
+                </Field>*/}
                 {isEdit ? (
                   <Field label="Status" required error={errors.is_active}>
                     <div className="flex items-center gap-4">
