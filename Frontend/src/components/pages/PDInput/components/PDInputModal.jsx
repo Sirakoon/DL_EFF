@@ -317,7 +317,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                   <div className="grid grid-cols-2 gap-3 pb-4">
                     <div>
                       <SubLabel>MC Speed</SubLabel>
-                      <AutoTag label="Pcs / min" value={selectedProduct?.mc_speed_pcs_hr} />
+                      <AutoTag label="Pcs / hr" value={selectedProduct?.mc_speed_pcs_hr} />
                     </div>
                     <div>
                       <SubLabel>Capacity</SubLabel>

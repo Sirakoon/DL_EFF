@@ -15,6 +15,7 @@ export const NAV_SECTIONS = [
     label: 'Config management',
     items: [
       { key: 'pd-machine', label: 'Machine Management', icon: 'machine' },
+      { key: 'pd-product', label: 'Product Management', icon: 'table' },
     ],
   },
   {

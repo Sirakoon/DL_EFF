@@ -42,11 +42,20 @@ BEGIN
         updated_by        VARCHAR(50) NULL,
         updated_at        DATETIME NULL,
 
-        /* ── computed columns (PERSISTED — เก็บค่าจริงลงดิสก์, index ได้) ── */
-        cal_output_at_oee        AS (mc_speed_pcs_hr * oee_target * 60) PERSISTED,
-        std_output                AS (mc_speed_pcs_hr * oee_target * 60 * machine_run_time) PERSISTED,
-        productivity_std_pcs_mh   AS (mc_speed_pcs_hr * oee_target * 60 * machine_run_time
-                                        / NULLIF(std_hc * std_hour, 0)) PERSISTED,
+        /* ── computed columns (PERSISTED — เก็บค่าจริงลงดิสก์, index ได้) ──
+           Auto machine (มี mc_speed_pcs_hr): rate = mc_speed_pcs_hr * oee_target
+           Manual machine (ไม่มี mc_speed_pcs_hr, ใช้ capacity_pcs_hr แทน): rate = capacity_pcs_hr
+           mc_speed_pcs_hr/capacity_pcs_hr เก็บหน่วยเป็น pcs/ชม. ตรงกันทั้งคู่ (ตาม Product_SMS)
+           ห้ามคูณ 60 ซ้ำ ── */
+        cal_output_at_oee        AS (CASE WHEN mc_speed_pcs_hr IS NOT NULL THEN mc_speed_pcs_hr * oee_target END) PERSISTED,
+        std_output                AS (CASE
+                                          WHEN mc_speed_pcs_hr IS NOT NULL THEN mc_speed_pcs_hr * oee_target * machine_run_time
+                                          ELSE capacity_pcs_hr * machine_run_time
+                                      END) PERSISTED,
+        productivity_std_pcs_mh   AS ((CASE
+                                          WHEN mc_speed_pcs_hr IS NOT NULL THEN mc_speed_pcs_hr * oee_target * machine_run_time
+                                          ELSE capacity_pcs_hr * machine_run_time
+                                      END) / NULLIF(std_hc * std_hour, 0)) PERSISTED,
         actual_hour                AS (hour_piece_rate - loss_hour - actual_bulk_hr - actual_pallet_hr - actual_assist_hr) PERSISTED,
         total_loss_hour             AS (loss_hour * actual_hc) PERSISTED,
         productivity_ac_pcs_mh    AS (actual_output / NULLIF(hour_piece_rate - loss_hour - actual_bulk_hr - actual_pallet_hr - actual_assist_hr, 0)) PERSISTED,

@@ -9,11 +9,13 @@ import MachineManagementPage from '../pages/MachineManagement';
 const DlEffDashboard = lazy(() => import('../pages/DlEff/index'));
 const PDInputPage = lazy(() => import('../pages/PDInput/index'));
 const UserManagementPage = lazy(() => import('../pages/UserManagement/index'));
+const ProductManagementPage = lazy(() => import('../pages/ProductManagement/index'));
 
 const PAGE_META = {
   'dl-eff': { title: 'DL Efficiency Dashboard', subtitle: 'Direct Labour Efficiency · Gown / Drape / CWC' },
   'pd-input': { title: 'Data Input', subtitle: 'Production record management' },
   'pd-machine': { title: 'Machine', subtitle: 'Machine management' },
+  'pd-product': { title: 'Product', subtitle: 'Product master data · capacity / MC speed' },
   'user-management': { title: 'User Management', subtitle: 'Approve registrations · reset passwords' },
 };
 
@@ -56,6 +58,7 @@ export default function LayoutPage() {
             {activeKey === 'dl-eff' && <DlEffDashboard />}
             {activeKey === 'pd-input' && <PDInputPage />}
             {activeKey === 'pd-machine' && <MachineManagementPage />}
+            {activeKey === 'pd-product' && <ProductManagementPage />}
             {activeKey === 'user-management' && isAdmin && <UserManagementPage />}
           </Suspense>
         </main>

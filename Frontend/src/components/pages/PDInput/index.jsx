@@ -27,7 +27,7 @@ import { todayStr as today, daysAgoStr as daysAgo } from "../../../utils/date";
 import Selected from "../../shared/Selected";
 import DatePicker from "../../shared/DatePicker";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 const MONTHS = [
   "Jan",
   "Feb",

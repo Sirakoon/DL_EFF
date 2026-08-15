@@ -8,6 +8,7 @@ const dlEffRoutes = require('./routes/dlEff');
 const pdInputRoutes = require('./routes/pdInput');
 const authRoutes = require('./routes/auth');
 const machineRoutes = require('./routes/machine')
+const productRoutes = require('./routes/product')
 
 const app = express();
 app.use(express.json());
@@ -32,6 +33,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/dl-eff', dlEffRoutes);
 app.use('/api/machine', machineRoutes);
+app.use('/api/product', productRoutes);
 app.use('/api/pd-input', pdInputRoutes);
 
 app.use((err, req, res, next) => {
