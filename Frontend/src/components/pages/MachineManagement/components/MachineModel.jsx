@@ -1,7 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { HiXMark, HiCheck, HiExclamationCircle } from "react-icons/hi2";
 import { TbLoader2 } from "react-icons/tb";
-import { createMachines, updateMachines } from "../../../../services/api";
+import {
+  createMachines,
+  updateMachines,
+  getProductGroups,
+} from "../../../../services/api";
 import { toast } from "../../../../lib/toast";
 import { todayStr } from "../../../../utils/date";
 
@@ -10,6 +14,7 @@ const getEmptyForm = () => ({
   oee_target: "",
   version: "",
   is_active: 1,
+  product_group: [],
 });
 
 /* ── primitives ─────────────────────────────────────────────────── */
@@ -103,12 +108,17 @@ function SectionHead({ color, edit, close }) {
   );
 }
 
-/* ── primitives ─────────────────────────────────────────────────── */
-function PopupProductGroup({isOpen,onClose,optionsList,selectedItems,onSelect}) {
+/* ── Popup ─────────────────────────────────────────────────── */
+function PopupProductGroup({
+  isOpen,
+  onClose,
+  optionsList,
+  selectedItems,
+  onSelect,
+}) {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/50 px-4 backdrop-blur-sm transition-opacity">
-      {/* Popup */}
       <div className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
@@ -117,11 +127,11 @@ function PopupProductGroup({isOpen,onClose,optionsList,selectedItems,onSelect}) 
           </h3>
           <button
             type="button"
-            onClick={() => onClose}
-            className="text-gray-400 hover:text-gray-600 focus:outline-none"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer hover:bg-red-200 rounded-full p-1"
           >
             <svg
-              className="h-6 w-6"
+              className="h-5 w-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -148,7 +158,7 @@ function PopupProductGroup({isOpen,onClose,optionsList,selectedItems,onSelect}) 
                 <span
                   className={`text-sm ${isSelected ? "font-semibold text-blue-700" : "text-gray-700"}`}
                 >
-                  {option}
+                  {option.product_group_name}
                 </span>
                 <div
                   className={`flex h-5 w-5 items-center justify-center rounded border ${isSelected ? "border-blue-600 bg-blue-600" : "border-gray-300 bg-white"}`}
@@ -185,7 +195,7 @@ function PopupProductGroup({isOpen,onClose,optionsList,selectedItems,onSelect}) 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 active:scale-95"
+            className="cursor-pointer rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 active:scale-95"
           >
             Done
           </button>
@@ -202,24 +212,11 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
   const [form, setForm] = useState(getEmptyForm);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [productGroups, setProductGroups] = useState([]);
 
   // const productGroupList = ["Machine A", "Machine B", "Machine C", "Machine D"];
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const optionsList = [
-    "Machine A",
-    "Machine B",
-    "Machine C",
-    "Machine D",
-    "Machine E",
-    "Machine F",
-    "Machine G",
-    "Machine AB",
-    "Machine GD",
-    "Machine GT",
-    "Machine GQ",
-    "Machine GW",
-  ];
 
   useEffect(() => {
     if (isEdit && initialData) {
@@ -227,10 +224,18 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
         machine_code: initialData.machine_code ?? "",
         oee_target: initialData.oee_target ?? "",
         version: initialData.version ?? "",
+        product_group: initialData.product_group ?? [],
         is_active: initialData.is_active ?? 1,
       });
     }
   }, [isEdit, initialData]);
+
+
+  useEffect(() => {
+    getProductGroups()
+      .then((res) => setProductGroups(res.data))
+      .catch((e) => toast.error(`Failed to load product groups: ${e.message}`));
+  }, []);
 
   const set = useCallback(
     (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value })),
@@ -254,16 +259,16 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
 
   const handleSelect = (option) => {
     setForm((prev) => {
-      const currentSelected = prev.selected_items || [];
+      const currentSelected = prev.product_group || [];
       if (currentSelected.includes(option)) {
         return {
           ...prev,
-          selected_items: currentSelected.filter((item) => item !== option),
+          product_group: currentSelected.filter((item) => item !== option),
         };
       }
       return {
         ...prev,
-        selected_items: [...currentSelected, option],
+        product_group: [...currentSelected, option],
       };
     });
   };
@@ -271,7 +276,7 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
   const handleRemove = (optionToRemove) => {
     setForm((prev) => ({
       ...prev,
-      selected_items: prev.selected_items.filter(
+      product_group: prev.product_group.filter(
         (item) => item !== optionToRemove,
       ),
     }));
@@ -282,7 +287,6 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
     setSaving(true);
     try {
       const payload = { ...form };
-      delete payload.product_group;
       if (isEdit) await updateMachines(initialData.machine_id, payload);
       else await createMachines(payload);
       toast.success(
@@ -317,98 +321,106 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
           <div className="space-y-5">
             <div>
               <div className="grid gap-x-4 gap-y-0">
-                <Field
-                  label="Machine Code"
-                  required
-                  error={errors.machine_code}
-                >
-                  <TInput
-                    type="text"
-                    value={form.machine_code}
-                    onChange={set("machine_code")}
-                    hasError={!!errors.machine_code}
-                  />
-                </Field>
-                <Field label="OEE Target" required error={errors.oee_target}>
-                  <TInput
-                    type="number"
-                    value={form.oee_target}
-                    onChange={set("oee_target")}
-                    step="0.001"
-                    min={0}
-                    max={1}
-                    hasError={!!errors.oee_target}
-                  />
-                </Field>
-                <Field label="Version">
-                  <TInput
-                    type="number"
-                    value={form.version}
-                    onChange={set("version")}
-                    hasError={!!errors.version}
-                  />
-                </Field>
-                {/*<Field label="Custom Multi-Select" required>
-                  <button
-                    type="button"
-                    onClick={() => setIsPopupOpen(true)}
-                    className="flex w-full cursor-pointer items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm transition-colors hover:bg-gray-50 focus:border-blue-500 focus:outline-none"
+                <div className="grid grid-cols-2 gap-x-4 gap-y-0">
+                  <Field
+                    label="Machine Code"
+                    required
+                    error={errors.machine_code}
                   >
-                    <span
-                      className={
-                        form.selected_items?.length > 0
-                          ? "text-gray-800 font-medium"
-                          : "text-gray-500"
-                      }
-                    >
-                      {form.selected_items?.length > 0
-                        ? `Selected ${form.selected_items.length} Product Group`
-                        : "Click to select Product Group..."}
-                    </span>
-                    <svg
-                      className="h-4 w-4 text-gray-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                  </button>
-
-                  {form.selected_items && form.selected_items.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {form.selected_items.map((item, index) => (
-                        <span
-                          key={index}
-                          className="flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-[13px] font-medium text-blue-700 shadow-sm"
-                        >
-                          {item}
-                          <button
-                            type="button"
-                            onClick={() => handleRemove(item)}
-                            className="ml-1 flex h-4 w-4 items-center justify-center rounded-full hover:bg-blue-200 text-blue-500 hover:text-blue-800 focus:outline-none transition-colors"
-                          >
-                            &times;
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {isPopupOpen && (
-                    <PopupProductGroup
-                      isOpen={isPopupOpen}
-                      onClose={() => setIsPopupOpen(false)}
-                      optionsList={optionsList}
-                      selectedItems={form.selected_items}
-                      onSelect={handleSelect}
+                    <TInput
+                      type="text"
+                      value={form.machine_code}
+                      onChange={set("machine_code")}
+                      hasError={!!errors.machine_code}
                     />
-                  )}
-                </Field>*/}
+                  </Field>
+                  <Field label="OEE Target" required error={errors.oee_target}>
+                    <TInput
+                      type="number"
+                      value={form.oee_target}
+                      onChange={set("oee_target")}
+                      step="0.001"
+                      min={0}
+                      max={1}
+                      hasError={!!errors.oee_target}
+                    />
+                  </Field>
+                  <Field label="Version">
+                    <TInput
+                      type="number"
+                      value={form.version}
+                      onChange={set("version")}
+                      hasError={!!errors.version}
+                    />
+                  </Field>
+                  <Field label="Custom Multi-Select" required>
+                    <button
+                      type="button"
+                      onClick={() => setIsPopupOpen(true)}
+                      className="flex w-full cursor-pointer items-center justify-between rounded-xl border-2 border-gray-300 bg-white px-3 py-2 text-sm transition-colors hover:border-blue-200 hover:text-blue-900 hover:bg-blue-200 focus:border-blue-500 focus:outline-none"
+                    >
+                      <span
+                        className={
+                          form.product_group?.length > 0
+                            ? "text-gray-800 font-medium"
+                            : "text-gray-500"
+                        }
+                      >
+                        {form.product_group?.length > 0
+                          ? `Selected ${
+                              form.product_group.length
+                            } Product Group`
+                          : "Click to select Product Group..."}
+                      </span>
+                      <svg
+                        className="h-4 w-4 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                    </button>
+                    {isPopupOpen && (
+                      <PopupProductGroup
+                        isOpen={isPopupOpen}
+                        onClose={() => setIsPopupOpen(false)}
+                        optionsList={productGroups}
+                        selectedItems={form.product_group}
+                        onSelect={handleSelect}
+                      />
+                    )}
+                  </Field>
+                </div>
+
+                {form.product_group && form.product_group.length > 0 && (
+                  <div className={`${isEdit ?"mb-3":""} flex flex-wrap gap-2`}>
+                    {form.product_group.map((item, index) => (
+                      <span
+                        key={index}
+                        className="flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-[13px] font-medium text-blue-700 shadow-sm"
+                      >
+                        {item.product_group_name}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            console.log(form);
+                            handleRemove(item);
+                          }}
+                          className="ml-1 flex h-4 w-4 items-center justify-center rounded-full hover:bg-blue-200 text-blue-500 hover:text-blue-800 focus:outline-none transition-colors cursor-pointer"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 {isEdit ? (
                   <Field label="Status" required error={errors.is_active}>
                     <div className="flex items-center gap-4">

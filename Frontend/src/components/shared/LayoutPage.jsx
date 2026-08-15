@@ -14,7 +14,7 @@ const ProductManagementPage = lazy(() => import('../pages/ProductManagement/inde
 const PAGE_META = {
   'dl-eff': { title: 'DL Efficiency Dashboard', subtitle: 'Direct Labour Efficiency · Gown / Drape / CWC' },
   'pd-input': { title: 'Data Input', subtitle: 'Production record management' },
-  'pd-machine': { title: 'Machine', subtitle: 'Machine management' },
+  'pd-machine': { title: 'Machine', subtitle: 'Machine Management' },
   'pd-product': { title: 'Product', subtitle: 'Product master data · capacity / MC speed' },
   'user-management': { title: 'User Management', subtitle: 'Approve registrations · reset passwords' },
 };

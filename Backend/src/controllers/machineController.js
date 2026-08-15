@@ -10,6 +10,7 @@ function validateBody(body) {
     'machine_code',
     'oee_target',
     'is_active',
+    'product_group'
   ];
 
   REQUIRED.forEach((k) => {
@@ -18,7 +19,6 @@ function validateBody(body) {
     }
   });
 
-  // oee_target ต้องอยู่ระหว่าง 0 - 1
   if (body.oee_target != null && body.oee_target !== '') {
     const value = Number(body.oee_target);
 
@@ -27,7 +27,6 @@ function validateBody(body) {
     }
   }
 
-  // is_active ต้องเป็น 0 หรือ 1
   if (
     body.is_active != null &&
     ![0, 1, true, false].includes(body.is_active)
@@ -49,18 +48,33 @@ const getAllMachines = async (req, res, next) => {
 
     const result = await pool.request().query(`
       SELECT
-        machine_id,
-        machine_code,
-        oee_target,
-        version,
-        is_active,
-        updated_at
-      FROM dim_machine
-      ORDER BY updated_at DESC, machine_id DESC
+        m.machine_id,
+        m.machine_code,
+        m.oee_target,
+        m.version,
+        m.is_active,
+        m.updated_at,
+        (
+          SELECT 
+            mpg.product_group_id,
+            dpg.product_group_name
+          FROM map_machine_product_group mpg
+          INNER JOIN dim_product_group dpg 
+            ON mpg.product_group_id = dpg.product_group_id
+          WHERE mpg.machine_id = m.machine_id
+          FOR JSON PATH
+        ) AS product_group
+      FROM dim_machine m
+      ORDER BY m.updated_at DESC, m.machine_id DESC
     `);
 
+    const formattedData = result.recordset.map((row) => ({
+      ...row,
+      product_group: JSON.parse(row.product_group || '[]') 
+    }));
+
     res.json({
-      data: result.recordset,
+      data: formattedData,
     });
 
   } catch (err) {
@@ -118,9 +132,7 @@ const createMachine = async (req, res, next) => {
     const errs = validateBody(req.body);
 
     if (errs.length) {
-      return res.status(400).json({
-        error: errs.join('; '),
-      });
+      return res.status(400).json({ error: errs.join('; ') });
     }
 
     const {
@@ -128,54 +140,36 @@ const createMachine = async (req, res, next) => {
       oee_target,
       version = null,
       is_active,
+      product_group = [], 
     } = req.body;
+
+    const productGroupJson = JSON.stringify(product_group); 
 
     const pool = getPool();
 
-    /* เช็ก machine_code ซ้ำ */
-    const duplicate = await pool.request()
-      .input('machine_code', sql.VarChar(30), machine_code)
-      .query(`
-        SELECT machine_id
-        FROM dim_machine
-        WHERE machine_code = @machine_code
-      `);
 
-    if (duplicate.recordset.length) {
-      return res.status(409).json({
-        error: 'machine_code already exists',
+    try {
+      const result = await pool.request()
+        .input('machine_code', sql.VarChar(30), machine_code)
+        .input('oee_target', sql.Decimal(5, 3), Number(oee_target))
+        .input('version', sql.Int, version)
+        .input('is_active', sql.Bit, is_active)
+        .input('product_group_json', sql.NVarChar(sql.MAX), productGroupJson) 
+        .execute('sp_CreateMachineWithMapping');
+
+      notifyDataChanged('machine-data');
+
+      return res.status(201).json({
+        message: 'Created successfully',
+        data: result.recordset[0],
       });
+
+    } catch (dbErr) {
+      if (dbErr.number === 50001) {
+        return res.status(409).json({ error: 'machine_code already exists' });
+      }
+      throw dbErr; 
     }
-
-    const result = await pool.request()
-      .input('machine_code', sql.VarChar(30), machine_code)
-      .input('oee_target', sql.Decimal(5, 3), Number(oee_target))
-      .input('version', sql.Int, version)
-      .input('is_active', sql.Bit, is_active)
-      .query(`
-        INSERT INTO dim_machine (
-          machine_code,
-          oee_target,
-          version,
-          is_active,
-          updated_at
-        )
-        OUTPUT INSERTED.*
-        VALUES (
-          @machine_code,
-          @oee_target,
-          @version,
-          @is_active,
-          SYSUTCDATETIME()
-        )
-      `);
-
-    notifyDataChanged('machine-data');
-
-    res.status(201).json({
-      message: 'Created successfully',
-      data: result.recordset[0],
-    });
 
   } catch (err) {
     next(err);
@@ -192,68 +186,44 @@ const updateMachine = async (req, res, next) => {
     const errs = validateBody(req.body);
 
     if (errs.length) {
-      return res.status(400).json({
-        error: errs.join('; '),
-      });
+      return res.status(400).json({ error: errs.join('; ') });
     }
 
     const { id } = req.params;
-
     const {
       machine_code,
       oee_target,
       version = null,
       is_active,
+      product_group = [], 
     } = req.body;
 
+    const productGroupJson = JSON.stringify(product_group);
     const pool = getPool();
 
-    /* เช็ก machine_code ซ้ำกับ machine ตัวอื่น */
-    const duplicate = await pool.request()
-      .input('id', sql.Int, Number(id))
-      .input('machine_code', sql.VarChar(30), machine_code)
-      .query(`
-        SELECT machine_id
-        FROM dim_machine
-        WHERE machine_code = @machine_code
-          AND machine_id <> @id
-      `);
+    try {
+      await pool.request()
+        .input('machine_id', sql.Int, Number(id))
+        .input('machine_code', sql.VarChar(30), machine_code)
+        .input('oee_target', sql.Decimal(5, 3), Number(oee_target))
+        .input('version', sql.Int, version)
+        .input('is_active', sql.Bit, is_active)
+        .input('product_group_json', sql.NVarChar(sql.MAX), productGroupJson)
+        .execute('sp_UpdateMachineWithMapping'); 
 
-    if (duplicate.recordset.length) {
-      return res.status(409).json({
-        error: 'machine_code already exists',
-      });
+      notifyDataChanged('machine-data');
+
+      res.json({ message: 'Updated successfully' });
+
+    } catch (dbErr) {
+      if (dbErr.number === 50001) {
+        return res.status(409).json({ error: 'machine_code already exists' });
+      }
+      if (dbErr.number === 50004) {
+        return res.status(404).json({ error: 'Machine not found' });
+      }
+      throw dbErr;
     }
-
-    const result = await pool.request()
-      .input('id', sql.Int, Number(id))
-      .input('machine_code', sql.VarChar(30), machine_code)
-      .input('oee_target', sql.Decimal(5, 3), Number(oee_target))
-      .input('version', sql.Int, version)
-      .input('is_active', sql.Bit, is_active)
-      .query(`
-        UPDATE dim_machine
-        SET
-          machine_code = @machine_code,
-          oee_target   = @oee_target,
-          version      = @version,
-          is_active    = @is_active,
-          updated_at   = SYSUTCDATETIME()
-        WHERE machine_id = @id
-      `);
-
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({
-        error: 'Machine not found',
-      });
-    }
-
-    notifyDataChanged('machine-data');
-
-    res.json({
-      message: 'Updated successfully',
-    });
-
   } catch (err) {
     next(err);
   }
@@ -267,28 +237,23 @@ const updateMachine = async (req, res, next) => {
 const removeMachine = async (req, res, next) => {
   try {
     const { id } = req.params;
-
     const pool = getPool();
 
-    const result = await pool.request()
-      .input('id', sql.Int, Number(id))
-      .query(`
-        DELETE FROM dim_machine
-        WHERE machine_id = @id
-      `);
+    try {
+      await pool.request()
+        .input('machine_id', sql.Int, Number(id))
+        .execute('sp_DeleteMachineWithMapping'); 
 
-    if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({
-        error: 'Machine not found',
-      });
+      notifyDataChanged('machine-data');
+
+      res.json({ message: 'Deleted successfully' });
+
+    } catch (dbErr) {
+      if (dbErr.number === 50004) {
+        return res.status(404).json({ error: 'Machine not found' });
+      }
+      throw dbErr;
     }
-
-    notifyDataChanged('machine-data');
-
-    res.json({
-      message: 'Deleted successfully',
-    });
-
   } catch (err) {
     next(err);
   }

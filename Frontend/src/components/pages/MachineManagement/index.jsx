@@ -32,10 +32,11 @@ export default function MachineManagementPage() {
       })
       .catch((e) => toast.error(`Failed to load users: ${e.message}`))
       .finally(() => setLoading(false));
+
+    console.log('mechines :',machines)
   }, []);
 
-  console.log(`check machine : `, machines);
-
+  
   useEffect(() => {
     fetch();
   }, [fetch]);
@@ -90,7 +91,7 @@ export default function MachineManagementPage() {
                     setSearch(e.target.value);
                     setPage(1);
                   }}
-                  placeholder="Search Username..."
+                  placeholder="Search Machine Code..."
                   className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 pl-9 pr-9 text-sm text-gray-700 outline-none transition-all duration-200
                 placeholder:text-gray-400 hover:border-blue-300 hover:bg-white focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100 "
                 />
