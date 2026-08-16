@@ -1,4 +1,5 @@
 import { HiXMark } from "react-icons/hi2";
+import { todayStr } from "../../utils/date";
 
 /* ── shared style tokens for form inputs across CRUD modals ────────── */
 const inputBase =
@@ -53,7 +54,7 @@ export function TInput({
       onChange={onChange}
       readOnly={readOnly}
       min={min}
-      max={max}
+      max={type === "date" ? todayStr() : max}
       step={step}
       className={readOnly ? inputRO : hasError ? inputError : inputNormal}
     />
