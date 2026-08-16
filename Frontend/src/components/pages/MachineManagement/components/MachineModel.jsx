@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { HiXMark, HiCheck, HiExclamationCircle } from "react-icons/hi2";
+import { HiCheck, HiExclamationCircle } from "react-icons/hi2";
 import { TbLoader2 } from "react-icons/tb";
 import {
   createMachines,
@@ -7,7 +7,7 @@ import {
   getAllProductGroups,
 } from "../../../../services/api";
 import { toast } from "../../../../lib/toast";
-import { todayStr } from "../../../../utils/date";
+import { Field, TInput, SectionHead } from "../../../shared/FormKit";
 
 const getEmptyForm = () => ({
   machine_code: "",
@@ -18,97 +18,6 @@ const getEmptyForm = () => ({
 });
 
 const isSameProductGroup = (a, b) => a.product_group_id === b.product_group_id;
-
-/* ── primitives ─────────────────────────────────────────────────── */
-function Field({ label, required, hint, error, children }) {
-  return (
-    <div>
-      <div className="flex items-baseline gap-1.5 mb-1.5">
-        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide leading-none">
-          {label}
-          {required && <span className="text-red-400 ml-0.5">*</span>}
-        </span>
-        {hint && (
-          <span className="text-[10px] text-gray-400 normal-case font-normal">
-            {hint}
-          </span>
-        )}
-      </div>
-      {children}
-      {/* fixed 16px slot so rows don't shift when errors appear */}
-      <div className="h-4 mt-0.5">
-        {error && (
-          <p className="text-[10px] text-red-500 font-medium leading-none">
-            {error}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-const inputBase =
-  "w-full h-10 border-2 border-gray-300 rounded-xl px-3 text-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400";
-const inputNormal = `${inputBase} bg-white text-gray-800 border-gray-200 hover:border-gray-300`;
-const inputError = `${inputBase} bg-white text-gray-800 border-red-300 ring-2 ring-red-200`;
-const inputRO = `${inputBase} bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed select-none `;
-
-function TInput({
-  value,
-  onChange,
-  type = "text",
-  readOnly,
-  min,
-  max,
-  step,
-  hasError,
-}) {
-  return (
-    <input
-      type={type}
-      value={value ?? ""}
-      onChange={onChange}
-      readOnly={readOnly}
-      min={min}
-      max={type === "date" ? todayStr() : max}
-      step={step}
-      className={readOnly ? inputRO : hasError ? inputError : inputNormal}
-    />
-  );
-}
-
-const SECTION_COLOR_SCHEME = {
-  blue: "bg-blue-600 text-blue-700 border-blue-100",
-  teal: "bg-teal-600 text-teal-700 border-teal-100",
-  emerald: "bg-emerald-600 text-emerald-700 border-emerald-100",
-  amber: "bg-amber-500 text-amber-700 border-amber-100",
-};
-
-function SectionHead({ color, edit, close }) {
-  const [bar, txt, bdr] = SECTION_COLOR_SCHEME[color].split(" ");
-  return (
-    <div
-      className={`flex items-center justify-between gap-2.5 px-4 mb-3 pb-2.5 border-b ${bdr}`}
-    >
-      <div className="flex items-center gap-4">
-        <span className={`w-1.5 h-10 ${bar} rounded-full flex-shrink-0`} />
-        <div className="">
-          <h3 className={` font-black ${txt} uppercase tracking-widest`}>
-            {edit ? "Edit Machine" : "Add Machine"}
-          </h3>
-          <p className="text-xs text-gray-400 mt-0.5">Machine Input</p>
-        </div>
-      </div>
-
-      <button
-        onClick={close}
-        className="cursor-pointer w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition"
-      >
-        <HiXMark className="text-xl" />
-      </button>
-    </div>
-  );
-}
 
 /* ── Popup ─────────────────────────────────────────────────── */
 function PopupProductGroup({
@@ -319,12 +228,7 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
     >
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 flex-shrink-0"></div>
-        <SectionHead
-          label="Edit Machine"
-          color={isEdit ? "amber" : "emerald"}
-          edit={isEdit}
-          close={onClose}
-        />
+        <SectionHead entityName="Machine" edit={isEdit} close={onClose} />
 
         <div className="overflow-y-auto flex-1 px-6 py-5 ">
           <div className="space-y-5">

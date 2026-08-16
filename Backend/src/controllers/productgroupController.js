@@ -1,5 +1,6 @@
 const { sql, getPool } = require('../config/db');
 const { notifyDataChanged } = require('../realtime');
+const { isDuplicate, fkViolationResponse } = require('../utils/crudHelpers');
 
 /* ── server-side validation ─────────────────────────────────────── */
 
@@ -102,15 +103,15 @@ const createProductGroup = async (req, res, next) => {
     const pool = getPool();
 
     /* เช็ก product_group_name ซ้ำ */
-    const duplicate = await pool.request()
-      .input('product_group_name', sql.VarChar(50), product_group_name)
-      .query(`
-        SELECT product_group_id
-        FROM dim_product_group
-        WHERE product_group_name = @product_group_name
-      `);
+    const duplicate = await isDuplicate(pool, {
+      table: 'dim_product_group',
+      idColumn: 'product_group_id',
+      column: 'product_group_name',
+      varcharLen: 50,
+      value: product_group_name,
+    });
 
-    if (duplicate.recordset.length) {
+    if (duplicate) {
       return res.status(409).json({
         error: 'product_group_name already exists',
       });
@@ -157,18 +158,17 @@ const updateProductGroup = async (req, res, next) => {
 
     const pool = getPool();
 
-    /* เช็ก product_code ซ้ำกับสินค้าตัวอื่น */
-    const duplicate = await pool.request()
-      .input('id', sql.Int, Number(id))
-      .input('product_group_name', sql.VarChar(50), product_group_name)
-      .query(`
-        SELECT product_group_id
-        FROM dim_product_group
-        WHERE product_group_name = @product_group_name
-          AND product_group_id <> @id
-      `);
+    /* เช็ก product_group_name ซ้ำกับกลุ่มอื่น */
+    const duplicate = await isDuplicate(pool, {
+      table: 'dim_product_group',
+      idColumn: 'product_group_id',
+      column: 'product_group_name',
+      varcharLen: 50,
+      value: product_group_name,
+      excludeId: Number(id),
+    });
 
-    if (duplicate.recordset.length) {
+    if (duplicate) {
       return res.status(409).json({
         error: 'product_group_name already exists',
       });
@@ -233,9 +233,7 @@ const removeProductGroup = async (req, res, next) => {
 
   } catch (err) {
     if (err.number === 547) {
-      return res.status(409).json({
-        error: 'Cannot delete: product group is still assigned to one or more products or machines',
-      });
+      return fkViolationResponse(res, 'Cannot delete: product group is still assigned to one or more products or machines');
     }
     next(err);
   }

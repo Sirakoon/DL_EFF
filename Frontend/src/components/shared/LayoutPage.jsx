@@ -4,10 +4,10 @@ import Header from './Header';
 import AuthModal from './AuthModal';
 import { ToastContainer } from './Toast';
 import { useAuth } from '../../context/AuthContext';
-import MachineManagementPage from '../pages/MachineManagement';
 
 const DlEffDashboard = lazy(() => import('../pages/DlEff/index'));
 const PDInputPage = lazy(() => import('../pages/PDInput/index'));
+const MachineManagementPage = lazy(() => import('../pages/MachineManagement'));
 const UserManagementPage = lazy(() => import('../pages/UserManagement/index'));
 const ProductManagementPage = lazy(() => import('../pages/ProductManagement/index'));
 

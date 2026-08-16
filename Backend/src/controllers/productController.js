@@ -1,5 +1,6 @@
 const { sql, getPool } = require('../config/db');
 const { notifyDataChanged } = require('../realtime');
+const { isDuplicate, fkViolationResponse } = require('../utils/crudHelpers');
 
 /* ── server-side validation ─────────────────────────────────────── */
 
@@ -147,15 +148,15 @@ const createProduct = async (req, res, next) => {
     const pool = getPool();
 
     /* เช็ก product_code ซ้ำ */
-    const duplicate = await pool.request()
-      .input('product_code', sql.VarChar(30), product_code)
-      .query(`
-        SELECT product_id
-        FROM dim_product
-        WHERE product_code = @product_code
-      `);
+    const duplicate = await isDuplicate(pool, {
+      table: 'dim_product',
+      idColumn: 'product_id',
+      column: 'product_code',
+      varcharLen: 30,
+      value: product_code,
+    });
 
-    if (duplicate.recordset.length) {
+    if (duplicate) {
       return res.status(409).json({
         error: 'product_code already exists',
       });
@@ -231,17 +232,16 @@ const updateProduct = async (req, res, next) => {
     const pool = getPool();
 
     /* เช็ก product_code ซ้ำกับสินค้าตัวอื่น */
-    const duplicate = await pool.request()
-      .input('id', sql.Int, Number(id))
-      .input('product_code', sql.VarChar(30), product_code)
-      .query(`
-        SELECT product_id
-        FROM dim_product
-        WHERE product_code = @product_code
-          AND product_id <> @id
-      `);
+    const duplicate = await isDuplicate(pool, {
+      table: 'dim_product',
+      idColumn: 'product_id',
+      column: 'product_code',
+      varcharLen: 30,
+      value: product_code,
+      excludeId: Number(id),
+    });
 
-    if (duplicate.recordset.length) {
+    if (duplicate) {
       return res.status(409).json({
         error: 'product_code already exists',
       });
@@ -317,9 +317,7 @@ const removeProduct = async (req, res, next) => {
 
   } catch (err) {
     if (err.number === 547) {
-      return res.status(409).json({
-        error: 'Cannot delete: product is referenced by existing production records',
-      });
+      return fkViolationResponse(res, 'Cannot delete: product is referenced by existing production records');
     }
     next(err);
   }
