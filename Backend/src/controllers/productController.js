@@ -78,32 +78,6 @@ const getAllProducts = async (req, res, next) => {
 
 
 /* ═══════════════════════════════════════════════════════════════════
-   GET /api/product/groups
-   ─────────────────────────────────────────────────────────────────
-   dropdown Product Group สำหรับฟอร์ม Add/Edit Product
-═══════════════════════════════════════════════════════════════════ */
-
-const getProductGroups = async (req, res, next) => {
-  try {
-    const pool = getPool();
-
-    const result = await pool.request().query(`
-      SELECT product_group_id, product_group_name
-      FROM dim_product_group
-      ORDER BY product_group_name
-    `);
-
-    res.json({
-      data: result.recordset,
-    });
-
-  } catch (err) {
-    next(err);
-  }
-};
-
-
-/* ═══════════════════════════════════════════════════════════════════
    GET /api/product/:id
 ═══════════════════════════════════════════════════════════════════ */
 
@@ -354,7 +328,6 @@ const removeProduct = async (req, res, next) => {
 
 module.exports = {
   getAllProducts,
-  getProductGroups,
   getProductById,
   createProduct,
   updateProduct,

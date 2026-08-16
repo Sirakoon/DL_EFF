@@ -6,7 +6,6 @@ import { getProducts } from "../../../services/api";
 import { toast } from "../../../lib/toast";
 import { useAuth } from "../../../context/AuthContext";
 import ProductGroupManagementPage from "./components/PGManagement";
-import ProductGroupModel from "./components/PGModel";
 
 /* ---- Model ---- */
 import ProductModal from "./components/ProductModel";

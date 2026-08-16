@@ -267,7 +267,7 @@ export default function MachineManagementPage() {
                                 {e.product_group?.map((pg) => (
                                   <div
                                     className="text-sm font-semibold text-gray-500"
-                                    key={pg.id}
+                                    key={pg.product_group_id}
                                   >
                                    - {pg.product_group_name}
                                   </div>

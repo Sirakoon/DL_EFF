@@ -4,7 +4,7 @@ import { TbLoader2 } from "react-icons/tb";
 import {
   createMachines,
   updateMachines,
-  getProductGroups,
+  getAllProductGroups,
 } from "../../../../services/api";
 import { toast } from "../../../../lib/toast";
 import { todayStr } from "../../../../utils/date";
@@ -16,6 +16,8 @@ const getEmptyForm = () => ({
   is_active: 1,
   product_group: [],
 });
+
+const isSameProductGroup = (a, b) => a.product_group_id === b.product_group_id;
 
 /* ── primitives ─────────────────────────────────────────────────── */
 function Field({ label, required, hint, error, children }) {
@@ -149,7 +151,9 @@ function PopupProductGroup({
         {/*ฺ Body */}
         <div className="max-h-[50vh] overflow-y-auto px-2 py-2">
           {optionsList.map((option, index) => {
-            const isSelected = (selectedItems || []).includes(option);
+            const isSelected = (selectedItems || []).some((item) =>
+              isSameProductGroup(item, option),
+            );
             return (
               <label
                 key={index}
@@ -232,7 +236,7 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
 
 
   useEffect(() => {
-    getProductGroups()
+    getAllProductGroups()
       .then((res) => setProductGroups(res.data))
       .catch((e) => toast.error(`Failed to load product groups: ${e.message}`));
   }, []);
@@ -260,10 +264,15 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
   const handleSelect = (option) => {
     setForm((prev) => {
       const currentSelected = prev.product_group || [];
-      if (currentSelected.includes(option)) {
+      const isSelected = currentSelected.some((item) =>
+        isSameProductGroup(item, option),
+      );
+      if (isSelected) {
         return {
           ...prev,
-          product_group: currentSelected.filter((item) => item !== option),
+          product_group: currentSelected.filter(
+            (item) => !isSameProductGroup(item, option),
+          ),
         };
       }
       return {
@@ -277,7 +286,7 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
     setForm((prev) => ({
       ...prev,
       product_group: prev.product_group.filter(
-        (item) => item !== optionToRemove,
+        (item) => !isSameProductGroup(item, optionToRemove),
       ),
     }));
   };
@@ -408,10 +417,7 @@ export default function MachineModal({ mode, initialData, onClose, onSaved }) {
                         {item.product_group_name}
                         <button
                           type="button"
-                          onClick={() => {
-                            console.log(form);
-                            handleRemove(item);
-                          }}
+                          onClick={() => handleRemove(item)}
                           className="ml-1 flex h-4 w-4 items-center justify-center rounded-full hover:bg-blue-200 text-blue-500 hover:text-blue-800 focus:outline-none transition-colors cursor-pointer"
                         >
                           &times;

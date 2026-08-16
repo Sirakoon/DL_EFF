@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { HiXMark, HiCheck, HiExclamationCircle } from "react-icons/hi2";
 import { TbLoader2 } from "react-icons/tb";
-import { createProduct, updateProduct, getProductGroups } from "../../../../services/api";
+import { createProduct, updateProduct, getAllProductGroups } from "../../../../services/api";
 import { toast } from "../../../../lib/toast";
 
 const getEmptyForm = () => ({
@@ -111,7 +111,7 @@ export default function ProductModal({ mode, initialData, onClose, onSaved }) {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    getProductGroups()
+    getAllProductGroups()
       .then((res) => setGroups(res.data))
       .catch((e) => toast.error(`Failed to load product groups: ${e.message}`));
   }, []);

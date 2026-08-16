@@ -56,12 +56,11 @@ export const deleteMachines = (id) => fetchJSON(`/machine/${id}`, { method: 'DEL
 
 /* ── Products — CRUD ────────────────────────────────────────────── */
 export const getProducts = () => fetchJSON('/product');
-export const getProductGroups = () => fetchJSON('/product/groups');
 export const createProduct = (body) => fetchJSON('/product', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 export const updateProduct = (id, body) => fetchJSON(`/product/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 export const deleteProduct = (id) => fetchJSON(`/product/${id}`, { method: 'DELETE' });
 
-/* ── Products — CRUD ────────────────────────────────────────────── */
+/* ── Product Groups — CRUD ──────────────────────────────────────── */
 export const getAllProductGroups = () => fetchJSON('/productgroup');
 export const getProductGroupById = (id) => fetchJSON(`/productgroup/${id}`);
 export const createProductGroup = (body) => fetchJSON('/productgroup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });

@@ -160,7 +160,7 @@ const updateProductGroup = async (req, res, next) => {
     /* เช็ก product_code ซ้ำกับสินค้าตัวอื่น */
     const duplicate = await pool.request()
       .input('id', sql.Int, Number(id))
-      .input('product_group_name', sql.VarChar(30), product_group_name)
+      .input('product_group_name', sql.VarChar(50), product_group_name)
       .query(`
         SELECT product_group_id
         FROM dim_product_group
@@ -234,7 +234,7 @@ const removeProductGroup = async (req, res, next) => {
   } catch (err) {
     if (err.number === 547) {
       return res.status(409).json({
-        error: 'Cannot delete: product is referenced by existing production records',
+        error: 'Cannot delete: product group is still assigned to one or more products or machines',
       });
     }
     next(err);

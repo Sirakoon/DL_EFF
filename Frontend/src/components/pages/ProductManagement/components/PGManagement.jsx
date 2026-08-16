@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { HiTrash, HiCube, HiPencilSquare } from "react-icons/hi2";
 import { IoSearch, IoClose } from "react-icons/io5";
 import { TbLoader2 } from "react-icons/tb";
-import { getProductGroups } from "../../../../services/api";
+import { getAllProductGroups } from "../../../../services/api";
 import { toast } from "../../../../lib/toast";
 import { useAuth } from "../../../../context/AuthContext";
 
@@ -26,7 +26,7 @@ export default function ProductGroupManagementPage() {
 
   const fetch = useCallback(() => {
     setLoading(true);
-    getProductGroups()
+    getAllProductGroups()
       .then((res) => {
         setProductGroups(res.data);
       })
