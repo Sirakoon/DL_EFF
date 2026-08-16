@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { HiTrash, HiCpuChip, HiPencilSquare } from "react-icons/hi2";
+import { useCallback, useEffect, useMemo, useState, React } from "react";
+import {
+  HiTrash,
+  HiCpuChip,
+  HiPencilSquare,
+  HiChevronDown,
+  HiChevronUp,
+} from "react-icons/hi2";
 import { IoSearch, IoClose } from "react-icons/io5";
 import { TbLoader2 } from "react-icons/tb";
 import { getMachines } from "../../../services/api";
@@ -19,6 +25,7 @@ export default function MachineManagementPage() {
   const [page, setPage] = useState(1);
 
   const [deleteModel, setDeleteModel] = useState(null);
+  const [expandedRows, setExpandedRows] = useState([]);
 
   const canEdit = user && user.role === "admin";
 
@@ -32,11 +39,8 @@ export default function MachineManagementPage() {
       })
       .catch((e) => toast.error(`Failed to load users: ${e.message}`))
       .finally(() => setLoading(false));
-
-    console.log('mechines :',machines)
   }, []);
 
-  
   useEffect(() => {
     fetch();
   }, [fetch]);
@@ -67,6 +71,15 @@ export default function MachineManagementPage() {
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE,
   );
+
+  const toggleRow = (id) => {
+    setExpandedRows(
+      (prev) =>
+        prev.includes(id)
+          ? prev.filter((rowId) => rowId !== id) // ปิดถ้าเปิดอยู่
+          : [...prev, id], // เปิดถ้าปิดอยู่
+    );
+  };
 
   return (
     <div className="space-y-5 pb-10">
@@ -132,7 +145,7 @@ export default function MachineManagementPage() {
               <thead className="bg-gray-50/80 border-b border-gray-200">
                 <tr>
                   <th
-                    className={`px-4 py-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide `}
+                    className={`px-4 py-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide flex items-center justify-start`}
                   >
                     No
                   </th>
@@ -146,6 +159,9 @@ export default function MachineManagementPage() {
                     version
                   </th>
                   <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
+                    Product Group
+                  </th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                     status
                   </th>
                   {canEdit && (
@@ -155,76 +171,115 @@ export default function MachineManagementPage() {
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {machinesData.map((e, i) => (
-                  <tr
-                    key={e.machines_id}
-                    className={` transition-colors ${
-                      e.is_active
-                        ? "bg-teal-100/10 hover:bg-teal-100/30"
-                        : "bg-gray-200/70 hover:bg-gray-300/60"
-                    }`}
-                  >
-                    <td className="px-4 py-3 text-xs text-gray-900 tabular-nums">
-                      {(page - 1) * PAGE_SIZE + i + 1}
-                    </td>
-                    <td className="px-6 py-3 font-semibold text-gray-800">
-                      {e.machine_code}
-                    </td>
-                    <td className="px-6 py-3">
-                      <span
-                        className={`text-[11px] font-bold px-2 py-0.5 rounded-full `}
-                      >
-                        {e.oee_target}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3">
-                      <span
-                        className={`text-[11px] font-bold px-2 py-0.5 rounded-full `}
-                      >
-                        {e.version ? e.version : "-"}
-                      </span>
-                    </td>
-                    <td
-                      className={`px-6 py-3 `}
-                    >
-                      <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
+
+              <tbody className="divide-y divide-gray-100 ">
+                {machinesData.map((e, i) => {
+                  const isExpanded = expandedRows.includes(e.machine_code);
+                  return (
+                    <>
+                      <tr
+                        key={e.machines_id}
+                        className={` transition-colors  ${
                           e.is_active
-                            ? "bg-green-100 text-green-700 border border-green-300"
-                            : "bg-gray-300 text-gray-700 border-gray-700"
+                            ? "bg-teal-100/10 hover:bg-teal-100/30"
+                            : "bg-gray-200/70 hover:bg-gray-300/60"
                         }`}
                       >
-                        {e.is_active ? "active" : "disable"}
-                      </span>
-                      {/* <span
-                        className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${STATUS_BADGE[u.status]}`}
-                      >
-                        {u.is_active}
-                      </span> */}
-                    </td>
-                    {canEdit && (
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => setModal({ mode: "edit", data: e })}
-                            title="Edit"
-                            className="w-8 h-8 flex items-center justify-center text-blue-500 hover:bg-blue-100 rounded-lg transition"
+                        <td className="px-4 py-3 text-xs text-gray-900 tabular-nums ">
+                          {(page - 1) * PAGE_SIZE + i + 1}
+                        </td>
+                        <td className="px-6 py-3 font-semibold text-gray-800">
+                          {e.machine_code}
+                        </td>
+                        <td className="px-6 py-3 ">{e.oee_target}</td>
+                        <td className="px-6 py-3 ">
+                          {e.version ? e.version : "-"}
+                        </td>
+                        <td className="px-6 py-3">
+                          <div className="flex items-center gap-2">
+                            <span>
+                              {e.product_group?.length ? (
+                                <div className="flex items-center justify-center gap-2">
+                                  <span>
+                                    {e.product_group.length} Product Group
+                                  </span>
+                                  <button
+                                    onClick={() => toggleRow(e.machine_code)}
+                                    className="flex items-center justify-center p-0.5 border border-gray-500 text-gray-500 transition-colors rounded-full hover:bg-gray-200 hover:text-gray-800 cursor-pointer"
+                                    title={isExpanded ? "Collapse" : "Expand"}
+                                  >
+                                    {isExpanded ? (
+                                      <HiChevronUp className="text-xs" />
+                                    ) : (
+                                      <HiChevronDown className="text-xs" />
+                                    )}
+                                  </button>
+                                </div>
+                              ) : (
+                                "-"
+                              )}
+                            </span>
+                          </div>
+                        </td>
+                        <td className={`px-6 py-3 `}>
+                          <span
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
+                              e.is_active
+                                ? "bg-green-100 text-green-700 border border-green-300"
+                                : "bg-gray-300 text-gray-700 border-gray-700"
+                            }`}
                           >
-                            <HiPencilSquare className="text-base" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteModel(e)}
-                            title="Delete"
-                            className="w-8 h-8 flex items-center justify-center text-red-400 hover:bg-red-100 rounded-lg transition"
-                          >
-                            <HiTrash className="text-base" />
-                          </button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
+                            {e.is_active ? "active" : "disable"}
+                          </span>
+                        </td>
+                        {canEdit && (
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() =>
+                                  setModal({ mode: "edit", data: e })
+                                }
+                                title="Edit"
+                                className="w-8 h-8 flex items-center justify-center text-blue-500 hover:bg-blue-100 rounded-lg transition"
+                              >
+                                <HiPencilSquare className="text-base" />
+                              </button>
+                              <button
+                                onClick={() => setDeleteModel(e)}
+                                title="Delete"
+                                className="w-8 h-8 flex items-center justify-center text-red-400 hover:bg-red-100 rounded-lg transition"
+                              >
+                                <HiTrash className="text-base" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                      {isExpanded && (
+                        <tr className="bg-gray-50">
+                          {/* colSpan ควรกำหนดให้เท่ากับจำนวนคอลัมน์ทั้งหมดในตาราง (6 หรือ 7 ขึ้นอยู่กับ canEdit) */}
+                          <td colSpan={canEdit ? 7 : 6} className="px-2 py-0">
+                            <div className="p-4 rounded-lg border border-gray-200 bg-gray-100 shadow-sm">
+                              <h4 className="mb-2 text-sm font-bold text-gray-700">
+                                รายละเอียด Product Group ของ {e.machine_code}
+                              </h4>
+                              <div className="grid grid-cols-5">
+                                {e.product_group?.map((pg) => (
+                                  <div
+                                    className="text-sm font-semibold text-gray-500"
+                                    key={pg.id}
+                                  >
+                                   - {pg.product_group_name}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  );
+                })}
               </tbody>
             </table>
             {totalPages > 1 && (

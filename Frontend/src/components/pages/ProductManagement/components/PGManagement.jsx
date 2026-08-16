@@ -1,0 +1,238 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { HiTrash, HiCube, HiPencilSquare } from "react-icons/hi2";
+import { IoSearch, IoClose } from "react-icons/io5";
+import { TbLoader2 } from "react-icons/tb";
+import { getProductGroups } from "../../../../services/api";
+import { toast } from "../../../../lib/toast";
+import { useAuth } from "../../../../context/AuthContext";
+
+/* ---- Model ---- */
+import ProductGroupModal from "./PGModel";
+import DeleteConfrim from "./DeleteConfrim";
+
+export default function ProductGroupManagementPage() {
+  const { user } = useAuth();
+  const [productGroups, setProductGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const [deleteModel, setDeleteModel] = useState(null);
+
+  const canEdit = user && user.role === "admin";
+
+  const PAGE_SIZE = 20;
+
+  const fetch = useCallback(() => {
+    setLoading(true);
+    getProductGroups()
+      .then((res) => {
+        setProductGroups(res.data);
+      })
+      .catch((e) => toast.error(`Failed to load products: ${e.message}`))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+
+  const filteredData = useMemo(() => {
+    return productGroups.filter((item) => {
+      const keyword = search.trim().toLowerCase();
+      const matches =
+        !keyword ||
+        String(item.product_group_name || "")
+          .toLowerCase()
+          .includes(keyword) 
+      return matches;
+    });
+  }, [productGroups, search]);
+
+  const handleSaved = () => {
+    setLoading(false);
+    setModal(null);
+    setDeleteModel(null);
+    fetch(true);
+  };
+
+  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+
+  const productsData = filteredData.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE,
+  );
+
+  return (
+    <div className="pb-10">
+      <div className="bg-white rounded-b-3xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-2  border-b border-gray-100">
+            <HiCube className="text-gray-400 text-lg" />
+            <span className="font-black text-gray-800">Product Group</span>
+            <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full ml-1 w-8 h-8 flex items-center justify-center">
+              {filteredData.length}
+            </span>
+            <div className="flex flex-col gap-1">
+              <div className="relative w-[280px]">
+                <IoSearch
+                  size={15}
+                  className=" absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  placeholder="Search Product Code / Group..."
+                  className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 pl-9 pr-9 text-sm text-gray-700 outline-none transition-all duration-200
+                placeholder:text-gray-400 hover:border-blue-300 hover:bg-white focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100 "
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch("");
+                    }}
+                    className=" absolute right-2 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-md text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+                  >
+                    <IoClose size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 rounded-xl p-1">
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => setModal({ mode: "create" })}
+                className={`h-10 flex items-center gap-2 px-6 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-md shadow-emerald-200 cursor-pointer`}
+              >
+                Add Product Group
+              </button>
+            )}
+          </div>
+        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <TbLoader2 className="text-2xl text-blue-500 animate-spin" />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50/80 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide w-12">
+                    No
+                  </th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
+                    Product Group 
+                  </th>
+                  {canEdit && (
+                    <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide w-20">
+                      action
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {productsData.map((e, i) => (
+                  <tr
+                    key={e.product_group_id}
+                    className={` transition-colors bg-teal-100/10 hover:bg-teal-100/30 `}
+                  >
+                    <td className="px-4 py-3 text-xs text-gray-900 tabular-nums">
+                      {(page - 1) * PAGE_SIZE + i + 1}
+                    </td>
+                    <td className="px-6 py-3 font-semibold text-gray-800">
+                      {e.product_group_name}
+                    </td>
+                    {canEdit && (
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setModal({ mode: "edit", data: e })}
+                            title="Edit"
+                            className="w-8 h-8 flex items-center justify-center text-blue-500 hover:bg-blue-100 rounded-lg transition"
+                          >
+                            <HiPencilSquare className="text-base" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteModel(e)}
+                            title="Delete"
+                            className="w-8 h-8 flex items-center justify-center text-red-400 hover:bg-red-100 rounded-lg transition"
+                          >
+                            <HiTrash className="text-base" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-end gap-1 px-6 py-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  disabled={page === 1}
+                  onClick={() => setPage((prev) => prev - 1)}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-500 hover:border-blue-400 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed  cursor-pointer transition"
+                >
+                  Prev
+                </button>
+
+                {Array.from(
+                  { length: totalPages },
+                  (_, index) => index + 1,
+                ).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPage(p)}
+                    className={`w-8 h-8 rounded-lg text-xs font-bold cursor-pointer transition
+                    ${p === page ? "bg-blue-700 text-white" : "border border-gray-200 text-gray-500 hover:border-blue-400 hover:text-blue-600"}`}
+                  >
+                    {p}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  disabled={page === totalPages}
+                  onClick={() => setPage((prev) => prev + 1)}
+                  className=" px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-gray-500 hover:border-blue-400 hover:text-blue-600
+                  disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* modals */}
+      {modal && (
+        <ProductGroupModal
+          mode={modal.mode}
+          initialData={modal.data}
+          onClose={() => setModal(null)}
+          onSaved={handleSaved}
+        />
+      )}
+      {deleteModel && (
+        <DeleteConfrim
+          record={deleteModel}
+          onClose={() => setDeleteModel(null)}
+          onDeleted={handleSaved}
+          feture='product-group'
+        />
+      )}
+    </div>
+  );
+}

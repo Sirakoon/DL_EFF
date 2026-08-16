@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { HiExclamationTriangle, HiTrash } from 'react-icons/hi2';
 import { TbLoader2 } from 'react-icons/tb';
-import { deleteProduct } from '../../../../services/api';
+import { deleteProduct, deleteProductGroup } from '../../../../services/api';
 import { toast } from '../../../../lib/toast';
 
-export default function DeleteConfirm({ record, onClose, onDeleted }) {
+export default function DeleteConfirm({ record, onClose, onDeleted,feture }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleDelete = async () => {
     setLoading(true);
     try {
-      await deleteProduct(record.product_id);
+      feture=="product"?await deleteProduct(record.product_id): await deleteProductGroup(record.product_group_id)
       toast.success('Record deleted');
       onDeleted();
     } catch (e) {
@@ -38,8 +38,8 @@ export default function DeleteConfirm({ record, onClose, onDeleted }) {
 
           <div className="bg-gray-50 rounded-2xl p-4 text-sm space-y-1.5 mb-5 border border-gray-100">
             <div className="flex justify-between">
-              <span className="text-gray-400 font-medium">Product</span>
-              <span className="font-semibold text-gray-700">{record.product_code}</span>
+              <span className="text-gray-400 font-medium">{feture=="product"?'Product':'Product Group'}</span>
+              <span className="font-semibold text-gray-700">{feture=="product"?record.product_code:record.product_group_name}</span>
             </div>
           </div>
 
@@ -48,13 +48,13 @@ export default function DeleteConfirm({ record, onClose, onDeleted }) {
           )}
 
           <div className="flex gap-3">
-            <button onClick={onClose} className="flex-1 py-2.5 text-sm font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-100 transition">
+            <button onClick={onClose} className="flex-1 py-2.5 text-sm font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-100 transition cursor-pointer">
               Cancel
             </button>
             <button
               onClick={handleDelete}
               disabled={loading}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 disabled:opacity-60 transition shadow-md shadow-red-200"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 disabled:opacity-60 transition shadow-md shadow-red-200 cursor-pointer"
             >
               {loading ? <TbLoader2 className="animate-spin" /> : <HiTrash />}
               {loading ? 'Deleting...' : 'Delete'}

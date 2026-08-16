@@ -61,6 +61,13 @@ export const createProduct = (body) => fetchJSON('/product', { method: 'POST', h
 export const updateProduct = (id, body) => fetchJSON(`/product/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 export const deleteProduct = (id) => fetchJSON(`/product/${id}`, { method: 'DELETE' });
 
+/* ── Products — CRUD ────────────────────────────────────────────── */
+export const getAllProductGroups = () => fetchJSON('/productgroup');
+export const getProductGroupById = (id) => fetchJSON(`/productgroup/${id}`);
+export const createProductGroup = (body) => fetchJSON('/productgroup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+export const updateProductGroup = (id, body) => fetchJSON(`/productgroup/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+export const deleteProductGroup = (id) => fetchJSON(`/productgroup/${id}`, { method: 'DELETE' });
+
 /* ── Auth ───────────────────────────────────────────────────────── */
 export const authRegister = (body) => fetchJSON('/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 export const authLogin = (body) => fetchJSON('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
