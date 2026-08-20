@@ -6,6 +6,7 @@ import {
   HiChevronDown,
   HiChevronUp,
 } from "react-icons/hi2";
+import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import { IoSearch, IoClose } from "react-icons/io5";
 import { TbLoader2 } from "react-icons/tb";
 import { getMachines } from "../../../services/api";
@@ -22,6 +23,7 @@ export default function MachineManagementPage() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
   const [page, setPage] = useState(1);
 
   const [deleteModel, setDeleteModel] = useState(null);
@@ -46,17 +48,28 @@ export default function MachineManagementPage() {
   }, [fetch]);
 
   const filteredData = useMemo(() => {
-    return machines.filter((item) => {
+    let result = machines.filter((item) => {
       const keyword = search.trim().toLowerCase();
-      const machinesSearch =
-        !keyword ||
-        String(item.machine_code || "")
-          .toLowerCase()
-          .includes(keyword);
+      if (!keyword) return true;
 
-      return machinesSearch;
+      return String(item.machine_code || "")
+        .toLowerCase()
+        .includes(keyword);
     });
-  }, [machines, search]);
+    if (sortOrder) {
+      result = [...result].sort((a, b) => {
+        const codeA = String(a.machine_code || "");
+        const codeB = String(b.machine_code || "");
+
+        if (sortOrder === "asc") {
+          return codeA.localeCompare(codeB, undefined, { numeric: true });
+        } else {
+          return codeB.localeCompare(codeA, undefined, { numeric: true });
+        }
+      });
+    }
+    return result;
+  }, [machines, search, sortOrder]);
 
   const handleSaved = () => {
     setLoading(false);
@@ -79,6 +92,10 @@ export default function MachineManagementPage() {
           ? prev.filter((rowId) => rowId !== id) // ปิดถ้าเปิดอยู่
           : [...prev, id], // เปิดถ้าปิดอยู่
     );
+  };
+
+  const sortMachine = (isAscending) => {
+    setSortOrder(isAscending ? "asc" : "desc");
   };
 
   return (
@@ -150,7 +167,19 @@ export default function MachineManagementPage() {
                     No
                   </th>
                   <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
-                    Machine Code
+                    <div className="flex items-center gap-1">
+                      Machine Code
+                      <div className="flex flex-col text-lg -space-y-1 cursor-pointer">
+                        <IoMdArrowDropup
+                          className={`hover:text-teal-600 transition-colors text-sm ${sortOrder === "desc" ? "text-teal-600" : "text-gray-400"}`}
+                          onClick={() => sortMachine(false)}
+                        />
+                        <IoMdArrowDropdown
+                          className={`hover:text-teal-600 transition-colors text-sm ${sortOrder === "asc" ? "text-teal-600" : "text-gray-400"}`}
+                          onClick={() => sortMachine(true)}
+                        />
+                      </div>
+                    </div>
                   </th>
                   <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                     oee target
@@ -269,7 +298,7 @@ export default function MachineManagementPage() {
                                     className="text-sm font-semibold text-gray-500"
                                     key={pg.product_group_id}
                                   >
-                                   - {pg.product_group_name}
+                                    - {pg.product_group_name}
                                   </div>
                                 ))}
                               </div>

@@ -6,6 +6,7 @@ import {
   HiChevronRight,
   HiTableCells,
 } from "react-icons/hi2";
+import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import { MdOutlineSpeed } from "react-icons/md";
 
 const PAGE_SIZE = 10;
@@ -71,7 +72,7 @@ function StatCard({ label, value, Icon, colorClass, bgClass }) {
   );
 }
 
-function Th({ children, right }) {
+function Th({ children, right, sort, coulumn }) {
   return (
     <th
       className={`px-3 py-3 text-[11px] font-bold text-gray-700 uppercase tracking-wide whitespace-nowrap ${right ? "text-right" : "text-left"}`}
@@ -83,12 +84,50 @@ function Th({ children, right }) {
 
 export default function DlEffDetailTable({ data, loading, target }) {
   const [page, setPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   const totalPages = Math.ceil((data?.length ?? 0) / PAGE_SIZE);
+  const sortedData = useMemo(() => {
+    if (!data) return [];
+
+    let result = [...data];
+
+    if (sortConfig.key) {
+      result.sort((a, b) => {
+        const valA = a[sortConfig.key];
+        const valB = b[sortConfig.key];
+
+        // จัดการกรณีค่าเป็น null หรือ undefined
+        if (valA == null && valB != null)
+          return sortConfig.direction === "asc" ? -1 : 1;
+        if (valB == null && valA != null)
+          return sortConfig.direction === "asc" ? 1 : -1;
+        if (valA == null && valB == null) return 0;
+
+        // กรณีที่เป็นตัวเลข (DL Eff %)
+        if (sortConfig.key === "dlEff") {
+          return sortConfig.direction === "asc" ? valA - valB : valB - valA;
+        }
+
+        // กรณีที่เป็น String (Machine, Product Code)
+        const strA = String(valA);
+        const strB = String(valB);
+        if (sortConfig.direction === "asc") {
+          return strA.localeCompare(strB, undefined, { numeric: true });
+        } else {
+          return strB.localeCompare(strA, undefined, { numeric: true });
+        }
+      });
+    }
+
+    return result;
+  }, [data, sortConfig]);
+
+  // 4. ตัดแบ่งหน้า (Pagination) จากข้อมูลที่ถูก Sort แล้ว
   const rows = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
-    return (data ?? []).slice(start, start + PAGE_SIZE);
-  }, [data, page]);
+    return sortedData.slice(start, start + PAGE_SIZE);
+  }, [sortedData, page]);
 
   const getPaginationItems = (currentPage, totalPages) => {
     if (totalPages <= 5) {
@@ -156,6 +195,13 @@ export default function DlEffDetailTable({ data, loading, target }) {
   ).length;
   const noDataCount = data.filter((r) => r.dlEff == null).length;
 
+  const handleSort = (key, isAscending) => {
+    setSortConfig({
+      key: key,
+      direction: isAscending ? "asc" : "desc",
+    });
+  };
+
   return (
     <div className="space-y-4">
       {/* Stat cards */}
@@ -213,7 +259,9 @@ export default function DlEffDetailTable({ data, loading, target }) {
                 <Th>Date</Th>
                 <Th>Shift</Th>
                 <Th>Machine</Th>
-                <Th>Product Code</Th>
+                <Th sort={true} coulumn={"PRODUCT_CODE"}>
+                  Product Code
+                </Th>
                 <Th right>Run Time</Th>
                 <Th right>Std HC</Th>
                 <Th right>Actual HC</Th>
@@ -292,7 +340,10 @@ export default function DlEffDetailTable({ data, loading, target }) {
                         ? Number(row.ACTUAL_OUTPUT).toLocaleString()
                         : "—"}
                     </td>
-                    <td className="px-3 py-3 text-xs text-gray-500 max-w-[160px] truncate" title={row.LOSS_REASON ?? ''}>
+                    <td
+                      className="px-3 py-3 text-xs text-gray-500 max-w-[160px] truncate"
+                      title={row.LOSS_REASON ?? ""}
+                    >
                       {row.LOSS_REASON || "—"}
                     </td>
                     <td className="px-3 py-3 text-right tabular-nums text-gray-500 text-xs">
@@ -313,59 +364,59 @@ export default function DlEffDetailTable({ data, loading, target }) {
 
         {/* Pagination */}
         {totalPages > 1 && (
-            <div className="flex items-center justify-end gap-2 my-4 px-4">
-              {/* Previous */}
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                title="Previous page"
-                className="flex items-center gap-1 px-3 h-8 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-xl
+          <div className="flex items-center justify-end gap-2 my-4 px-4">
+            {/* Previous */}
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              title="Previous page"
+              className="flex items-center gap-1 px-3 h-8 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-xl
             hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed transition-allshadow-sm cursor-pointer"
-              >
-                <HiChevronLeft />
-                <span className="hidden sm:inline">Prev</span>
-              </button>
+            >
+              <HiChevronLeft />
+              <span className="hidden sm:inline">Prev</span>
+            </button>
 
-              {/* Page Numbers */}
-              <div className="flex items-center gap-1">
-                {getPaginationItems(page, totalPages).map((item, index) => {
-                  if (item === "...") {
-                    return (
-                      <span
-                        key={`dots-${index}`}
-                        className="w-8 h-8 flex items-center justify-center text-gray-300 text-sm select-none"
-                      >
-                        …
-                      </span>
-                    );
-                  }
-
+            {/* Page Numbers */}
+            <div className="flex items-center gap-1">
+              {getPaginationItems(page, totalPages).map((item, index) => {
+                if (item === "...") {
                   return (
-                    <button
-                      key={item}
-                      onClick={() => setPage(item)}
-                      className={` w-8 h-8 rounded-xl text-xs font-blacktransition-all
+                    <span
+                      key={`dots-${index}`}
+                      className="w-8 h-8 flex items-center justify-center text-gray-300 text-sm select-none"
+                    >
+                      …
+                    </span>
+                  );
+                }
+
+                return (
+                  <button
+                    key={item}
+                    onClick={() => setPage(item)}
+                    className={` w-8 h-8 rounded-xl text-xs font-blacktransition-all
                     ${page === item ? ` bg-blue-600 text-white shadow-md shadow-blue-200 scale-105` : ` text-gray-500 bg-white hover:bg-blue-50 hover:text-blue-600 cursor-pointer`}
                     `}
-                    >
-                      {item}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Next */}
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                title="Next page"
-                className="flex items-center gap-1 px-3 h-8 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-xl
-            hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm cursor-pointer"
-              >
-                <span className="hidden sm:inline ">Next</span>
-                <HiChevronRight />
-              </button>
+                  >
+                    {item}
+                  </button>
+                );
+              })}
             </div>
+
+            {/* Next */}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              title="Next page"
+              className="flex items-center gap-1 px-3 h-8 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-xl
+            hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm cursor-pointer"
+            >
+              <span className="hidden sm:inline ">Next</span>
+              <HiChevronRight />
+            </button>
+          </div>
         )}
       </div>
     </div>

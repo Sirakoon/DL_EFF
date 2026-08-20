@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { HiTrash, HiCube, HiPencilSquare } from "react-icons/hi2";
+import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import { IoSearch, IoClose } from "react-icons/io5";
 import { TbLoader2 } from "react-icons/tb";
 import { getAllProductGroups } from "../../../../services/api";
@@ -16,6 +17,7 @@ export default function ProductGroupManagementPage() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
   const [page, setPage] = useState(1);
 
   const [deleteModel, setDeleteModel] = useState(null);
@@ -39,16 +41,30 @@ export default function ProductGroupManagementPage() {
   }, [fetch]);
 
   const filteredData = useMemo(() => {
-    return productGroups.filter((item) => {
+    let result = productGroups.filter((item) => {
       const keyword = search.trim().toLowerCase();
-      const matches =
-        !keyword ||
-        String(item.product_group_name || "")
-          .toLowerCase()
-          .includes(keyword) 
-      return matches;
+      if (!keyword) return true;
+
+      return String(item.product_group_name || "")
+        .toLowerCase()
+        .includes(keyword);
     });
-  }, [productGroups, search]);
+
+    if (sortOrder) {
+      result = [...result].sort((a, b) => {
+        const nameA = String(a.product_group_name || "");
+        const nameB = String(b.product_group_name || "");
+
+        if (sortOrder === "asc") {
+          return nameA.localeCompare(nameB, undefined, { numeric: true });
+        } else {
+          return nameB.localeCompare(nameA, undefined, { numeric: true });
+        }
+      });
+    }
+
+    return result;
+  }, [productGroups, search, sortOrder]);
 
   const handleSaved = () => {
     setLoading(false);
@@ -58,6 +74,9 @@ export default function ProductGroupManagementPage() {
   };
 
   const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+
+  const handleSort = (isAscending) =>
+    setSortOrder(isAscending ? "asc" : "desc");
 
   const productsData = filteredData.slice(
     (page - 1) * PAGE_SIZE,
@@ -130,7 +149,21 @@ export default function ProductGroupManagementPage() {
                     No
                   </th>
                   <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
-                    Product Group 
+                    <div className="flex items-center gap-1">
+                      Product Group
+                      <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                        <IoMdArrowDropup
+                          className={`hover:text-teal-600 transition-colors ${sortOrder === "desc" ? "text-teal-600" : "text-gray-400"}`}
+                          onClick={() =>
+                            handleSort(false)
+                          }
+                        />
+                        <IoMdArrowDropdown
+                          className={`hover:text-teal-600 transition-colors ${sortOrder === "asc" ? "text-teal-600" : "text-gray-400"}`}
+                          onClick={() => handleSort( true)}
+                        />
+                      </div>
+                    </div>
                   </th>
                   {canEdit && (
                     <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide w-20">
@@ -230,7 +263,7 @@ export default function ProductGroupManagementPage() {
           record={deleteModel}
           onClose={() => setDeleteModel(null)}
           onDeleted={handleSaved}
-          feture='product-group'
+          feture="product-group"
         />
       )}
     </div>
