@@ -1,6 +1,9 @@
 import { todayStr } from '../utils/date';
 
-export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// Relative by default: the production build is served by the backend from
+// the same origin, so plain "/api" works regardless of hostname/IP. Set
+// VITE_API_URL only for local dev against a backend on a different host/port.
+export const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const AUTH_TOKEN_KEY = 'rtu_auth_token';
 export const getAuthToken = () => localStorage.getItem(AUTH_TOKEN_KEY);

@@ -1,0 +1,106 @@
+สรุปสิ่งที่ต้องทำก่อนขึ้น Production — โปรเจกต์ DL Eff
+(อัปเดตล่าสุด 2026-09-05 — production host ที่ตกลงกันไว้ = 10.245.97.200, backend รันที่ port 80 ตัวเดียว)
+
+═══════════════════════════════════════════════════════════════════
+สรุปสิ่งที่ทำไปแล้ววันนี้ (2026-09-05)
+═══════════════════════════════════════════════════════════════════
+
+A) ตั้งค่าให้รันได้ด้วยพอร์ตเดียว (80) — ยืนยันด้วยการรันจริงแล้ว
+   - Frontend/vite.config.js: เพิ่ม build.outDir ให้ชี้ตรงไปที่ ../Backend/public (พร้อม emptyOutDir)
+     ผลคือ `npm run build` ที่ Frontend จะเอาไฟล์ static ไปวางที่ Backend/public ให้อัตโนมัติ ไม่ต้อง copy มือ
+   - Backend/src/app.js: เพิ่ม express.static(Backend/public) + SPA fallback route (ส่ง index.html ให้ทุก
+     path ที่ไม่ใช่ /api/* หรือ /health) วางไว้หลัง route /api ทั้งหมดแล้ว จึงไม่ชนกับ API
+   - Frontend/src/services/api.js: BASE_URL เปลี่ยนจาก hardcode "http://localhost:80/api" เป็น relative
+     "/api" (ใช้ได้ไม่ว่าจะเข้าเว็บผ่าน host/IP ไหนก็ตาม เพราะ frontend/backend อยู่ origin เดียวกันแล้ว)
+   - Frontend/src/lib/socket.js: แก้ตามให้ Socket.IO ต่อ same-origin เมื่อ BASE_URL เป็น relative (เดิมจะ
+     กลายเป็น URL ว่างเปล่าและต่อไม่ติด)
+   - Backend/.env: ตั้ง NODE_ENV=production, CORS_ORIGINS=http://10.245.97.200, PORT=80 (มีอยู่แล้ว)
+   - Frontend/.env: คอมเมนต์ VITE_API_URL ออก (ให้ fallback ไปใช้ relative "/api" ตอน build จริง)
+   - ทดสอบจริงแล้ว: build ผ่าน, รัน `node index.js` แล้วยิง curl เข้า http://localhost:80/ (ได้ index.html),
+     เข้า path อื่น เช่น /dashboard/whatever (SPA fallback ได้ index.html เหมือนกัน — ใช้งานได้แม้ยังไม่ได้ใช้
+     react-router จริงในโค้ดตอนนี้), /health, /api/machine, /api/product, /api/pd-input/master/... ทั้งหมด
+     ตอบ 200 ถูกต้อง
+
+B) ตรวจโค้ดทั้งโปรเจกต์ (backend ทุก controller/route/middleware, frontend ทุกหน้า/component) แล้วแก้บัคที่เจอ
+   1. [แก้แล้ว] Frontend/src/components/pages/MachineManagement/index.jsx
+      - แถวในตาราง Machine ใช้ `key={e.machines_id}` ซึ่งเป็นชื่อ field ที่ไม่มีจริง (ของจริงคือ machine_id)
+        ทำให้ทุกแถวมี React key เป็น undefined เหมือนกันหมด — เสี่ยงให้ตารางแสดงผลผิดแถว/สลับข้อมูลกันตอน
+        filter, sort หรือหลัง edit/delete ที่มีการ re-render → แก้เป็น `key={e.machine_id}` แล้ว
+   2. [แก้แล้ว] Frontend/src/components/pages/PDInput/components/PDInputModal.jsx
+      - บัคสำคัญ: dropdown "Product Group" ในฟอร์ม Add/Edit Production Record ใช้ state `checkMachine` ที่
+        แยกออกจาก `form.machine_code` — ตอน "Edit" record เดิม ค่านี้ไม่เคยถูกตั้งเลย ทำให้ dropdown ว่างเปล่า
+        ทุกครั้งที่เปิดแก้ไข record, และตอน "Add" ใหม่ ถ้าเครื่องจักรที่เลือกยังไม่มีประวัติ mapping กับ
+        product group มาก่อนเลย dropdown จะว่างจนกรอกข้อมูลต่อไม่ได้ (ของเดิมควร fallback ไปโชว์ทุก group)
+        → แก้กลับไปใช้ค่าที่คำนวณจาก form.machine_code ตรงๆ (โค้ดเดิมที่ถูกคอมเมนต์ทิ้งไว้ข้างบนถูกต้องอยู่แล้ว
+        เอากลับมาใช้จริง) ทดสอบ logic แล้วว่าตรงกับพฤติกรรมที่ตั้งใจไว้
+
+   ไฟล์ที่ตรวจแล้วไม่พบบัค (อ่านครบทุกไฟล์): ทุก controller/route/middleware/util ฝั่ง Backend, และฝั่ง
+   Frontend — AuthContext, useAutoRefresh, App/LayoutPage, FormKit, DatePicker, Selected, Toast, Header,
+   Sidebar, ทุกหน้า CRUD (Machine/Product/ProductGroup/PDInput/UserManagement) และ modal ที่เกี่ยวข้อง,
+   DlEff dashboard + chart + detail table
+
+   หมายเหตุอื่นที่เจอระหว่างตรวจ (ไม่ใช่บัค แต่ควรรู้ไว้ ไม่ได้แก้ให้เพราะเป็นการตัดสินใจเชิง product/security):
+   - GET /api/machine, /api/product, /api/productgroup, /api/pd-input (list + create) ไม่ต้อง login เลย
+     (ตั้งใจแบบนี้ตามคอมเมนต์ในโค้ด "เปิดอิสระ ไม่บังคับ login") — ถ้าต้องการปิดให้ login ก่อนค่อยแจ้ง
+   - `react-router` อยู่ใน Frontend/package.json แต่ไม่ได้ถูกใช้จริงในโค้ดที่ไหนเลย (เมนูสลับหน้าใช้ useState
+     ธรรมดา ไม่ใช่ URL routing) — ไม่กระทบการทำงาน เป็นแค่ dependency เกินความจำเป็น เอาออกได้ถ้าต้องการ
+   - Frontend/src/utils/date.js (todayStr ฝั่งเว็บ) อิงเวลาเครื่อง client ตรงๆ ส่วน backend pin เป็น
+     Asia/Bangkok เสมอ — ถ้าเครื่องที่เปิดเว็บตั้ง timezone ไม่ตรง Thailand อาจเลือกวันที่ได้ไม่ตรงกับที่
+     backend ยอมรับ (ปกติเครื่องในโรงงานตั้ง TZ ไทยอยู่แล้วจึงไม่กระทบจริง แต่บันทึกไว้เผื่อย้ายเครื่อง)
+   - eslint (`npm run lint`) มี error `react-hooks/set-state-in-effect` ในหลายไฟล์ (AuthContext,
+     DatePicker, UserManagement, ProductManagement, ProductModel, Toast) — เป็น rule ใหม่ที่เข้มงวดของ
+     eslint-plugin-react-hooks เตือนการเรียก setState ใน useEffect ตรงๆ (pattern โหลดข้อมูลตอน mount ซึ่ง
+     เป็นวิธีมาตรฐานและทำงานถูกต้อง ไม่ใช่บัค runtime) มีอยู่ก่อนวันนี้แล้ว ไม่ได้แก้เพราะเป็นการรีแฟคเตอร์
+     ใหญ่หลายไฟล์ นอกเหนือขอบเขตงานวันนี้ — แจ้งไว้เผื่อจะจัดการทีหลัง
+
+═══════════════════════════════════════════════════════════════════
+สิ่งที่ยังต้องทำต่อก่อนขึ้น production จริง
+═══════════════════════════════════════════════════════════════════
+
+1. ยืนยัน/ตั้งค่า Environment Variables ของ Backend บนเครื่อง production จริง (10.245.97.200)
+   - [ทำแล้ว] NODE_ENV=production, CORS_ORIGINS=http://10.245.97.200, PORT=80
+   - DB_SERVER ตอนนี้ยังเป็น "Sirawit" (ทดสอบวันนี้ต่อฐานข้อมูลนี้ได้จริงจากเครื่องที่รันงานอยู่ — แต่ไม่
+     ทราบว่านี่คือเครื่อง production จริงหรือเป็นเครื่อง dev ที่บังเอิญต่อได้) ต้องยืนยันให้ชัดว่าเครื่อง
+     10.245.97.200 ต่อ SQL Server ตัวไหน แล้วแก้ DB_SERVER (และอาจต้อง DB_NAME) ให้ตรงก่อน deploy จริง
+   - JWT_SECRET มีค่าจริงแล้ว (ไม่ใช่ placeholder) — ถ้าเครื่อง production ใช้ .env คนละไฟล์กับที่แก้วันนี้
+     ต้องก็อปค่านี้ไปด้วย หรือสร้างค่าใหม่แล้วตั้งบนเครื่อง production โดยตรง
+
+2. เตรียมฐานข้อมูลบนเซิร์ฟเวอร์ production (ยังไม่เปลี่ยนจากเดิม)
+   - รันสคริปต์ sql/001 ถึง sql/021 ตามลำดับ (มี sql/021_truncate_demo_data.sql เพิ่มเข้ามาใหม่ — เข้าใจว่า
+     ไว้ล้างข้อมูลตัวอย่าง/ทดสอบก่อนขึ้นจริง ตรวจให้แน่ใจว่ารันบนฐานที่ถูกต้องเท่านั้น)
+   - ห้ามรัน sql/seed_mock_pd_data_aug2026.sql บนฐาน production
+   - ติดตั้ง ODBC Driver 17 for SQL Server บนเครื่องที่รัน backend (production host) ให้พร้อม และรันภายใต้
+     Windows account ที่มีสิทธิ์เข้าถึงฐานข้อมูลจริง (Trusted_Connection)
+
+3. สมัครบัญชี admin คนแรกทันทีหลัง deploy (ผู้ใช้คนแรกที่ register จะได้ role admin + approved อัตโนมัติ)
+
+4. เตรียม process manager ให้ Backend รันค้างไว้ตลอด (ยังไม่มี)
+   - เลือกและตั้งค่า PM2 / NSSM (รันเป็น Windows Service) / Task Scheduler ให้ auto-restart เมื่อ crash หรือ
+     เครื่อง reboot — ตอนนี้ถ้ารันด้วย `npm start` เฉยๆ แล้ว process ตาย จะไม่มีอะไร restart ให้อัตโนมัติ
+
+5. เรื่อง HTTPS/TLS (ยังไม่มี — ตอนนี้เป็น HTTP ธรรมดาบนพอร์ต 80)
+   - Login/รหัสผ่าน/JWT token จะวิ่งเป็น plain HTTP ถ้าไม่มี TLS — ถ้าเป็น intranet ปิดล้อมอาจยอมรับความ
+     เสี่ยงนี้ได้ แต่ถ้าต้องการ HTTPS จริงต้องมี reverse proxy (Nginx/IIS) ทำ TLS termination หน้าพอร์ต 80/443
+     แล้ว proxy ต่อเข้า backend อีกที (ถ้าเพิ่ม reverse proxy ภายหลัง ต้องเช็คให้ proxy อนุญาต WebSocket
+     upgrade ด้วย เพราะ Socket.IO ใช้ websocket)
+
+6. ทดสอบ flow หลักแบบ manual ผ่านหน้าเว็บจริงกับ SQL Server จริง (วันนี้ทดสอบผ่าน curl/API เท่านั้น)
+   - สมัคร/login/approve user, สิทธิ์ตาม role (admin/editor/viewer)
+   - หน้า dashboard, dl-eff, pd-input ดึง/กรอง/แก้ไขข้อมูลถูกต้อง (โดยเฉพาะฟอร์ม Add/Edit ที่เพิ่งแก้บัค
+     dropdown Product Group ไป — ควรทดสอบทั้งกรณี Add ใหม่ และ Edit record เดิม)
+   - หน้า Machine Management และ Product Management (รวม tab Product Group) — เน้นเคส "edit เครื่องจักรที่มี
+     product group ผูกอยู่แล้วหลายตัว" และเช็คว่า key bug ที่แก้ไปไม่กระทบการแสดงผล/expand แถว
+   - real-time update (Socket.IO) push ข้อมูลอัปเดตขึ้นหน้าจอจริงเมื่อมีการเปลี่ยนแปลงข้อมูล (ต้องทดสอบผ่าน
+     พอร์ต 80 เดียวกับที่ backend เสิร์ฟ frontend ด้วย ไม่ใช่แค่ตอน dev ที่ผ่าน vite proxy)
+
+7. ทบทวนความปลอดภัยของ /api/auth/forgot-password
+   - เป็น self-service แบบไม่มี email/OTP ยืนยันตัวตน (รู้แค่ username ก็ตั้งรหัสผ่านใหม่ได้เลย) — ต้อง
+     ตัดสินใจว่ายอมรับความเสี่ยงนี้ หรือเพิ่มการยืนยันตัวตนก่อนขึ้น production
+
+8. เตรียมแผนสำรองข้อมูล (backup) ของฐานข้อมูล SQL Server บนเครื่อง production — ยังไม่มีการระบุ backup
+   schedule/retention ไว้ในโปรเจกต์
+
+9. [ทำแล้วก่อนหน้านี้] logging/monitoring พื้นฐาน
+   - request logger, GET /health, process.on('uncaughtException'/'unhandledRejection') — ยังเป็นระดับ
+     พื้นฐาน (log ออก console เท่านั้น) ถ้าต้องการ monitoring จริงจังกว่านี้ (Sentry, Windows Event Log ฯลฯ)
+     ค่อยพิจารณาต่อ

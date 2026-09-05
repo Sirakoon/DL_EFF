@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { connect, getPool } = require('./config/db');
@@ -37,6 +38,24 @@ app.use('/api/machine', machineRoutes);
 app.use('/api/product', productRoutes);
 app.use('/api/productgroup', productGroupRoutes);
 app.use('/api/pd-input', pdInputRoutes);
+
+// Serve the built frontend (Frontend `npm run build` emits into this folder,
+// see Frontend/vite.config.js) so the whole app runs behind a single port.
+const publicDir = path.join(__dirname, '..', 'public');
+app.use(express.static(publicDir));
+
+// SPA fallback: any other GET request (client-side routes from react-router)
+// gets index.html so deep links / refreshes work. Placed after the routes
+// above and the static middleware so /api/*, /health and real static files
+// are never shadowed by this.
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || req.path.startsWith('/api') || req.path === '/health') {
+    return next();
+  }
+  res.sendFile(path.join(publicDir, 'index.html'), (err) => {
+    if (err) next(err);
+  });
+});
 
 app.use((err, req, res, next) => {
   console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} —`, err);

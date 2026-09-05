@@ -178,7 +178,7 @@ export default function MachineManagementPage() {
                   return (
                     <>
                       <tr
-                        key={e.machines_id}
+                        key={e.machine_id}
                         className={` transition-colors  ${
                           e.is_active
                             ? "bg-teal-100/10 hover:bg-teal-100/30"

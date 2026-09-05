@@ -3,7 +3,8 @@ require('dotenv').config();
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isProduction = NODE_ENV === 'production';
 
-const DEV_ORIGINS = 'http://localhost:5173,http://localhost:5174';
+// const DEV_ORIGINS = 'http://localhost:5173,http://localhost:5174';
+const DEV_ORIGINS = 'http://localhost:8080,http://10.240.162.3:8080';
 const PLACEHOLDER_JWT_SECRET = 'change-me-to-a-long-random-string';
 
 function fail(message) {
