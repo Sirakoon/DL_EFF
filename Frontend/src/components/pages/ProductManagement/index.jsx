@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { HiTrash, HiCube, HiPencilSquare } from "react-icons/hi2";
+import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import { IoSearch, IoClose } from "react-icons/io5";
 import { TbLoader2 } from "react-icons/tb";
 import { getProducts } from "../../../services/api";
@@ -17,8 +18,10 @@ export default function ProductManagementPage() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
   const [page, setPage] = useState(1);
   const [tap, setTap] = useState("product");
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   const [deleteModel, setDeleteModel] = useState(null);
 
@@ -41,10 +44,11 @@ export default function ProductManagementPage() {
   }, [fetch]);
 
   const filteredData = useMemo(() => {
-    return products.filter((item) => {
+    let result = products.filter((item) => {
       const keyword = search.trim().toLowerCase();
-      const matches =
-        !keyword ||
+      if (!keyword) return true;
+
+      return (
         String(item.product_code || "")
           .toLowerCase()
           .includes(keyword) ||
@@ -53,17 +57,36 @@ export default function ProductManagementPage() {
           .includes(keyword) ||
         String(item.product_description || "")
           .toLowerCase()
-          .includes(keyword);
-
-      return matches;
+          .includes(keyword)
+      );
     });
-  }, [products, search]);
+    if (sortConfig.key) {
+      result = [...result].sort((a, b) => {
+        const valA = String(a[sortConfig.key] || "");
+        const valB = String(b[sortConfig.key] || "");
+        if (sortConfig.direction === "asc") {
+          return valA.localeCompare(valB, undefined, { numeric: true });
+        } else {
+          return valB.localeCompare(valA, undefined, { numeric: true });
+        }
+      });
+    }
+
+    return result;
+  }, [products, search, sortConfig]);
 
   const handleSaved = () => {
     setLoading(false);
     setModal(null);
     setDeleteModel(null);
     fetch(true);
+  };
+
+  const handleSort = (key, isAscending) => {
+    setSortConfig({
+      key: key,
+      direction: isAscending ? "asc" : "desc",
+    });
   };
 
   const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
@@ -152,13 +175,41 @@ export default function ProductManagementPage() {
                       No
                     </th>
                     <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
-                      Product Code
+                      <div className="flex items-center gap-1">
+                        Product Code
+                        <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                          <IoMdArrowDropup
+                            className={`hover:text-teal-600 transition-colors ${sortConfig.key === "product_code" && sortConfig.direction === "desc" ? "text-teal-600" : "text-gray-400"}`}
+                            onClick={() => handleSort("product_code", false)}
+                          />
+                          <IoMdArrowDropdown
+                            className={`hover:text-teal-600 transition-colors ${sortConfig.key === "product_code" && sortConfig.direction === "asc" ? "text-teal-600" : "text-gray-400"}`}
+                            onClick={() => handleSort("product_code", true)}
+                          />
+                        </div>
+                      </div>
                     </th>
                     <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                       Description
                     </th>
                     <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
-                      Product Group
+                      <div className="flex items-center gap-1">
+                        Product Group
+                        <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                          <IoMdArrowDropup
+                            className={`hover:text-teal-600 transition-colors ${sortConfig.key === "product_group_name" && sortConfig.direction === "desc" ? "text-teal-600" : "text-gray-400"}`}
+                            onClick={() =>
+                              handleSort("product_group_name", false)
+                            }
+                          />
+                          <IoMdArrowDropdown
+                            className={`hover:text-teal-600 transition-colors ${sortConfig.key === "product_group_name" && sortConfig.direction === "asc" ? "text-teal-600" : "text-gray-400"}`}
+                            onClick={() =>
+                              handleSort("product_group_name", true)
+                            }
+                          />
+                        </div>
+                      </div>
                     </th>
                     <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                       Capacity (Pcs/hr)
