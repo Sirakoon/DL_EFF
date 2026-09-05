@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback,useMemo } from "react";
 import {
   HiPlus,
   HiPencilSquare,
@@ -11,6 +11,7 @@ import {
   HiFunnel,
   HiArrowDownTray,
 } from "react-icons/hi2";
+import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import { TbLoader2, TbDatabaseOff } from "react-icons/tb";
 import { MdToday } from "react-icons/md";
 import {
@@ -153,6 +154,7 @@ export default function PDInputPage() {
   const [productGroup, setProductGroup] = useState("");
   const [productCode, setProductCode] = useState("");
   const [page, setPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
@@ -168,7 +170,6 @@ export default function PDInputPage() {
   const [delRow, setDelRow] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
-
   /* load filter options once */
   useEffect(() => {
     getPdInputFilters()
@@ -246,6 +247,42 @@ export default function PDInputPage() {
     }).catch((e) => toast.error(`Export failed: ${e.message}`));
   };
 
+  const sortedData = useMemo(() => {
+    if (!data) return [];
+
+    let result = [...data];
+
+    if (sortConfig.key) {
+      result.sort((a, b) => {
+        const valA = a[sortConfig.key];
+        const valB = b[sortConfig.key];
+
+        // จัดการกรณีค่าเป็น null หรือ undefined
+        if (valA == null && valB != null)
+          return sortConfig.direction === "asc" ? -1 : 1;
+        if (valB == null && valA != null)
+          return sortConfig.direction === "asc" ? 1 : -1;
+        if (valA == null && valB == null) return 0;
+
+        // กรณีที่เป็นตัวเลข (DL Eff %)
+        if (sortConfig.key === "dlEff") {
+          return sortConfig.direction === "asc" ? valA - valB : valB - valA;
+        }
+
+        // กรณีที่เป็น String (Machine, Product Code)
+        const strA = String(valA);
+        const strB = String(valB);
+        if (sortConfig.direction === "asc") {
+          return strA.localeCompare(strB, undefined, { numeric: true });
+        } else {
+          return strB.localeCompare(strA, undefined, { numeric: true });
+        }
+      });
+    }
+
+    return result;
+  }, [data, sortConfig]);
+
   const getPaginationItems = (currentPage, totalPages) => {
     if (totalPages <= 5) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -284,6 +321,18 @@ export default function PDInputPage() {
     }
 
     return pages;
+  };
+
+  const rows = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return sortedData.slice(start, start + PAGE_SIZE);
+  }, [sortedData, page]);
+
+  const handleSort = (key, isAscending) => {
+    setSortConfig({
+      key: key,
+      direction: isAscending ? "asc" : "desc",
+    });
   };
 
   return (
@@ -490,9 +539,37 @@ export default function PDInputPage() {
                   <Th>No</Th>
                   <Th>Date</Th>
                   <Th>Shift</Th>
-                  <Th>Machine</Th>
+                  <th className="px-3 py-3 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                    <div className="flex items-center gap-1">
+                      Machine
+                      <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                        <IoMdArrowDropup
+                          className={`hover:text-blue-600 transition-colors ${sortConfig.key === "machine_code" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
+                          onClick={() => handleSort("machine_code", true)}
+                        />
+                        <IoMdArrowDropdown
+                          className={`hover:text-blue-600 transition-colors ${sortConfig.key === "machine_code" && sortConfig.direction === "desc" ? "text-blue-600" : "text-gray-300"}`}
+                          onClick={() => handleSort("machine_code", false)}
+                        />
+                      </div>
+                    </div>
+                  </th>
                   <Th>Product Group</Th>
-                  <Th>Product Code</Th>
+                  <th className="px-3 py-3 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                    <div className="flex items-center gap-1">
+                      Product Code
+                      <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                        <IoMdArrowDropup
+                          className={`hover:text-blue-600 transition-colors ${sortConfig.key === "product_code" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
+                          onClick={() => handleSort("product_code", true)}
+                        />
+                        <IoMdArrowDropdown
+                          className={`hover:text-blue-600 transition-colors ${sortConfig.key === "product_code" && sortConfig.direction === "desc" ? "text-blue-600" : "text-gray-300"}`}
+                          onClick={() => handleSort("product_code", false)}
+                        />
+                      </div>
+                    </div>
+                  </th>
                   <Th right>Run Time</Th>
                   <Th right>Actual HC</Th>
                   <Th right>Actual Output</Th>
@@ -500,12 +577,26 @@ export default function PDInputPage() {
                   <Th>Loss Reason</Th>
                   <Th right>Prod STD</Th>
                   <Th right>Prod AC</Th>
-                  <Th right>DL Eff %</Th>
+                  <th className="px-3 py-3 text-right text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                    <div className="flex items-center justify-end gap-1">
+                      DL Eff %
+                      <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                        <IoMdArrowDropup
+                          className={`hover:text-blue-600 transition-colors ${sortConfig.key === "dl_eff_percent" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
+                          onClick={() => handleSort("dl_eff_percent", true)}
+                        />
+                        <IoMdArrowDropdown
+                          className={`hover:text-blue-600 transition-colors ${sortConfig.key === "dl_eff_percent" && sortConfig.direction === "desc" ? "text-blue-600" : "text-gray-300"}`}
+                          onClick={() => handleSort("dl_eff_percent", false)}
+                        />
+                      </div>
+                    </div>
+                  </th>
                   {canEdit && <Th>Actions</Th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {data.map((row, idx) => (
+                {rows.map((row, idx) => (
                   <tr
                     key={row.record_id}
                     className={`transition-colors ${row.dl_eff_percent != null && row.dl_eff_percent < 3.1 ? "bg-red-100/40 hover:bg-red-300/50" : "bg-green-100/40 hover:bg-green-300/50"}`}
@@ -518,7 +609,8 @@ export default function PDInputPage() {
                     </td>
                     <td className="px-4 py-3">
                       {(() => {
-                        const c = colorShift[row.shift_code] ?? DEFAULT_BADGE_COLOR;
+                        const c =
+                          colorShift[row.shift_code] ?? DEFAULT_BADGE_COLOR;
                         return (
                           <span
                             className={`${c.text} ${c.bg} ${c.border} inline-flex items-center justify-center w-8 h-8 text-xs font-black rounded-xl`}
@@ -533,7 +625,9 @@ export default function PDInputPage() {
                     </td>
                     <td className="px-4 py-3">
                       {(() => {
-                        const c = colorProductGroup[row.product_group_name] ?? DEFAULT_BADGE_COLOR;
+                        const c =
+                          colorProductGroup[row.product_group_name] ??
+                          DEFAULT_BADGE_COLOR;
                         return (
                           <span
                             className={`${c.text} ${c.bg} ${c.border}  text-xs font-medium px-2.5 py-1 rounded-full`}
@@ -560,7 +654,10 @@ export default function PDInputPage() {
                     <td className="px-4 py-3 text-right tabular-nums text-gray-500">
                       {num(row.loss_hour)}
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500 max-w-[160px] truncate" title={row.loss_reason ?? ''}>
+                    <td
+                      className="px-4 py-3 text-xs text-gray-500 max-w-[160px] truncate"
+                      title={row.loss_reason ?? ""}
+                    >
                       {row.loss_reason || "—"}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums text-gray-500">

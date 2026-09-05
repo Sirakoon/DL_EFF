@@ -72,7 +72,7 @@ function StatCard({ label, value, Icon, colorClass, bgClass }) {
   );
 }
 
-function Th({ children, right, sort, coulumn }) {
+function Th({ children, right}) {
   return (
     <th
       className={`px-3 py-3 text-[11px] font-bold text-gray-700 uppercase tracking-wide whitespace-nowrap ${right ? "text-right" : "text-left"}`}
@@ -258,10 +258,36 @@ export default function DlEffDetailTable({ data, loading, target }) {
                 <Th>No</Th>
                 <Th>Date</Th>
                 <Th>Shift</Th>
-                <Th>Machine</Th>
-                <Th sort={true} coulumn={"PRODUCT_CODE"}>
-                  Product Code
-                </Th>
+                <th className="px-3 py-3 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                  <div className="flex items-center gap-1">
+                    Machine
+                    <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                      <IoMdArrowDropup
+                        className={`hover:text-blue-600 transition-colors ${sortConfig.key === "MACHINE" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
+                        onClick={() => handleSort("MACHINE", true)}
+                      />
+                      <IoMdArrowDropdown
+                        className={`hover:text-blue-600 transition-colors ${sortConfig.key === "MACHINE" && sortConfig.direction === "desc" ? "text-blue-600" : "text-gray-300"}`}
+                        onClick={() => handleSort("MACHINE", false)}
+                      />
+                    </div>
+                  </div>
+                </th>
+                <th className="px-3 py-3 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                  <div className="flex items-center gap-1">
+                    Product Code
+                    <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                      <IoMdArrowDropup
+                        className={`hover:text-blue-600 transition-colors ${sortConfig.key === "PRODUCT_CODE" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
+                        onClick={() => handleSort("PRODUCT_CODE", true)}
+                      />
+                      <IoMdArrowDropdown
+                        className={`hover:text-blue-600 transition-colors ${sortConfig.key === "PRODUCT_CODE" && sortConfig.direction === "desc" ? "text-blue-600" : "text-gray-300"}`}
+                        onClick={() => handleSort("PRODUCT_CODE", false)}
+                      />
+                    </div>
+                  </div>
+                </th>
                 <Th right>Run Time</Th>
                 <Th right>Std HC</Th>
                 <Th right>Actual HC</Th>
@@ -269,7 +295,21 @@ export default function DlEffDetailTable({ data, loading, target }) {
                 <Th>Loss Reason</Th>
                 <Th right>Prod STD</Th>
                 <Th right>Prod AC</Th>
-                <Th right>DL Eff %</Th>
+                <th className="px-3 py-3 text-right text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                  <div className="flex items-center justify-end gap-1">
+                    DL Eff %
+                    <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                      <IoMdArrowDropup
+                        className={`hover:text-blue-600 transition-colors ${sortConfig.key === "dlEff" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
+                        onClick={() => handleSort("dlEff", true)}
+                      />
+                      <IoMdArrowDropdown
+                        className={`hover:text-blue-600 transition-colors ${sortConfig.key === "dlEff" && sortConfig.direction === "desc" ? "text-blue-600" : "text-gray-300"}`}
+                        onClick={() => handleSort("dlEff", false)}
+                      />
+                    </div>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
