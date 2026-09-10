@@ -266,8 +266,8 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                     </TSelect>
                   </Field>
                   {/* row 2 */}
-                  <Field label="Machine" required error={errors.machine_code}>
-                    <TSelect value={form.machine_code} onChange={handleMachineChange} hasError={!!errors.machine_code}>
+                  <Field label="Machine" required hint={isEdit ? "· locked after creation" : ''} error={errors.machine_code}>
+                    <TSelect value={form.machine_code} onChange={handleMachineChange} disabled={isEdit} hasError={!!errors.machine_code}>
                       <option value="">Select Machine</option>
                       {machines.map((m) => <option key={m.machine_code} value={m.machine_code}>{m.machine_code}</option>)}
                     </TSelect>
@@ -286,15 +286,15 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                   {/* row 1 */}
                   <Field
                     label="Product Group" required error={errors.product_group}
-                    hint={machineGroups && machineGroups.size > 0 ? '· filtered by machine' : ''}
+                    hint={isEdit ? '· locked after creation' : machineGroups && machineGroups.size > 0 ? '· filtered by machine' : ''}
                   >
-                    <TSelect value={form.product_group} disabled={!form.machine_code} onChange={handleGroupChange} hasError={!!errors.product_group}>
+                    <TSelect value={form.product_group} disabled={isEdit || !form.machine_code} onChange={handleGroupChange} hasError={!!errors.product_group}>
                       <option value="">Select Product Group</option>
                       {productGroups.map((g) => <option key={g} value={g}>{g}</option>)}
                     </TSelect>
                   </Field>
-                  <Field label="Product Code" required hint={!form.product_group ? '· select group first' : ''} error={errors.product_code}>
-                    <TSelect value={form.product_code} onChange={set('product_code')} disabled={!form.product_group} hasError={!!errors.product_code}>
+                  <Field label="Product Code" required hint={isEdit ? '· locked after creation' : !form.product_group ? '· select group first' : ''} error={errors.product_code}>
+                    <TSelect value={form.product_code} onChange={set('product_code')} disabled={isEdit || !form.product_group} hasError={!!errors.product_code}>
                       <option value="">Select Product Code</option>
                       {filteredProducts.map((p) => <option key={p.product_code} value={p.product_code}>{p.product_code}</option>)}
                     </TSelect>

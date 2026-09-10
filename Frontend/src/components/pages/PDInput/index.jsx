@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback,useMemo } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   HiPlus,
   HiPencilSquare,
@@ -178,9 +178,11 @@ export default function PDInputPage() {
   }, []);
 
   const hasLoadedOnce = useRef(false);
+  const reqSeq = useRef(0); // guards against out-of-order responses
 
-  const fetch = useCallback(
+  const load = useCallback(
     (background = false) => {
+      const seq = ++reqSeq.current;
       background ? setRefreshing(true) : setLoading(true);
       getPdInputList({
         dateFrom,
@@ -190,28 +192,40 @@ export default function PDInputPage() {
         productCode,
         page,
         pageSize: PAGE_SIZE,
+        sortBy: sortConfig.key || undefined,
+        sortDir: sortConfig.key ? sortConfig.direction : undefined,
       })
         .then((res) => {
+          if (seq !== reqSeq.current) return; // superseded by a newer request
+          // current page fell out of range (last row on last page deleted,
+          // or a tighter filter left fewer pages) — snap back to page 1
+          if (page > 1 && res.total > 0 && res.data.length === 0) {
+            setPage(1);
+            return;
+          }
           setData(res.data);
           setTotal(res.total);
           setLastUpdated(new Date());
         })
         .catch((e) => {
+          if (seq !== reqSeq.current) return; // superseded by a newer request
           if (!background) toast.error(`Failed to load records: ${e.message}`);
         })
         .finally(() => {
+          // always clear this request's own spinner, even if a newer
+          // request superseded it — otherwise the spinner can stick
           background ? setRefreshing(false) : setLoading(false);
           hasLoadedOnce.current = true;
         });
     },
-    [dateFrom, dateTo, shift, productGroup, productCode, page],
+    [dateFrom, dateTo, shift, productGroup, productCode, page, sortConfig],
   );
 
   useEffect(() => {
-    fetch(hasLoadedOnce.current);
-  }, [fetch]);
+    load(hasLoadedOnce.current);
+  }, [load]);
 
-  useAutoRefresh(() => fetch(true), { enabled: autoRefresh });
+  useAutoRefresh(() => load(true), { enabled: autoRefresh });
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -234,7 +248,7 @@ export default function PDInputPage() {
   const handleSaved = () => {
     setModal(null);
     setDelRow(null);
-    fetch(true);
+    load(true);
   };
 
   const handleExport = () => {
@@ -246,42 +260,6 @@ export default function PDInputPage() {
       productCode,
     }).catch((e) => toast.error(`Export failed: ${e.message}`));
   };
-
-  const sortedData = useMemo(() => {
-    if (!data) return [];
-
-    let result = [...data];
-
-    if (sortConfig.key) {
-      result.sort((a, b) => {
-        const valA = a[sortConfig.key];
-        const valB = b[sortConfig.key];
-
-        // จัดการกรณีค่าเป็น null หรือ undefined
-        if (valA == null && valB != null)
-          return sortConfig.direction === "asc" ? -1 : 1;
-        if (valB == null && valA != null)
-          return sortConfig.direction === "asc" ? 1 : -1;
-        if (valA == null && valB == null) return 0;
-
-        // กรณีที่เป็นตัวเลข (DL Eff %)
-        if (sortConfig.key === "dlEff") {
-          return sortConfig.direction === "asc" ? valA - valB : valB - valA;
-        }
-
-        // กรณีที่เป็น String (Machine, Product Code)
-        const strA = String(valA);
-        const strB = String(valB);
-        if (sortConfig.direction === "asc") {
-          return strA.localeCompare(strB, undefined, { numeric: true });
-        } else {
-          return strB.localeCompare(strA, undefined, { numeric: true });
-        }
-      });
-    }
-
-    return result;
-  }, [data, sortConfig]);
 
   const getPaginationItems = (currentPage, totalPages) => {
     if (totalPages <= 5) {
@@ -323,12 +301,13 @@ export default function PDInputPage() {
     return pages;
   };
 
-  const rows = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    return sortedData.slice(start, start + PAGE_SIZE);
-  }, [sortedData, page]);
+  // server จัดการทั้ง sort และ pagination แล้ว (sp_get_pd_input_list:
+  // ORDER BY + OFFSET/FETCH) — data ที่ได้คือ 1 หน้าเรียงมาเรียบร้อย
+  // ห้าม slice หรือ sort ซ้ำฝั่ง client ไม่งั้นหน้า 2+ จะว่าง / เรียงผิด
+  const rows = data;
 
   const handleSort = (key, isAscending) => {
+    setPage(1); // เปลี่ยนการเรียง = กลับไปหน้า 1 เสมอ
     setSortConfig({
       key: key,
       direction: isAscending ? "asc" : "desc",
@@ -507,7 +486,7 @@ export default function PDInputPage() {
               {autoRefresh ? "⟳ Auto" : "Auto off"}
             </button>
             <button
-              onClick={() => fetch(true)}
+              onClick={() => load(true)}
               disabled={loading || refreshing}
               className="w-8 h-8 flex items-center justify-center rounded-xl shadow-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition cursor-pointer"
             >

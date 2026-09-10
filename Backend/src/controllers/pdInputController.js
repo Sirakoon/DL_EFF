@@ -48,7 +48,7 @@ const getAll = async (req, res, next) => {
     const errors = [...validateDateRangeQuery(req.query), ...validatePagination(req.query)];
     if (errors.length) return res.status(400).json({ error: errors.join('; ') });
 
-    const { dateFrom, dateTo, shift, productGroup, productCode, page = 1, pageSize = 100 } = req.query;
+    const { dateFrom, dateTo, shift, productGroup, productCode, page = 1, pageSize = 100, sortBy, sortDir } = req.query;
 
     const pool = getPool();
     const result = await pool.request()
@@ -59,6 +59,10 @@ const getAll = async (req, res, next) => {
       .input('productCode', sql.VarChar(30), productCode || null)
       .input('page', sql.Int, Number(page))
       .input('pageSize', sql.Int, Number(pageSize))
+      // sp_get_pd_input_list whitelists these — an unknown column or
+      // direction is ignored and the default (production_date DESC) is used
+      .input('sortBy', sql.VarChar(30), sortBy || null)
+      .input('sortDir', sql.VarChar(4), sortDir || null)
       .execute('sp_get_pd_input_list');
 
     const [rows, [{ total }]] = result.recordsets;
