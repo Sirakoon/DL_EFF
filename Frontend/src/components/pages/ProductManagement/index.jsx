@@ -7,6 +7,7 @@ import { getProducts } from "../../../services/api";
 import { toast } from "../../../lib/toast";
 import { useAuth } from "../../../context/AuthContext";
 import ProductGroupManagementPage from "./components/PGManagement";
+import Selected from "../../shared/Selected";
 
 /* ---- Model ---- */
 import ProductModal from "./components/ProductModel";
@@ -18,6 +19,7 @@ export default function ProductManagementPage() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [search, setSearch] = useState("");
+  const [productGroupFilter, setProductGroupFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
   const [page, setPage] = useState(1);
   const [tap, setTap] = useState("product");
@@ -43,8 +45,18 @@ export default function ProductManagementPage() {
     fetch();
   }, [fetch]);
 
+  const productGroupOptions = useMemo(
+    () =>
+      [...new Set(products.map((p) => p.product_group_name).filter(Boolean))].sort(),
+    [products],
+  );
+
   const filteredData = useMemo(() => {
     let result = products.filter((item) => {
+      if (productGroupFilter && item.product_group_name !== productGroupFilter) {
+        return false;
+      }
+
       const keyword = search.trim().toLowerCase();
       if (!keyword) return true;
 
@@ -73,7 +85,7 @@ export default function ProductManagementPage() {
     }
 
     return result;
-  }, [products, search, sortConfig]);
+  }, [products, search, productGroupFilter, sortConfig]);
 
   const handleSaved = () => {
     setLoading(false);
@@ -149,6 +161,16 @@ export default function ProductManagementPage() {
                   )}
                 </div>
               </div>
+              <Selected
+                className="w-44"
+                value={productGroupFilter}
+                options={productGroupOptions}
+                emptyLabel="All Groups"
+                onChange={(value) => {
+                  setProductGroupFilter(value);
+                  setPage(1);
+                }}
+              />
             </div>
             <div className="flex items-center gap-1 rounded-xl p-1">
               {canEdit && (
