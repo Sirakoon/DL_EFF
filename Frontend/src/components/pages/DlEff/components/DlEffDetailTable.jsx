@@ -5,31 +5,25 @@ import {
   HiChevronLeft,
   HiChevronRight,
   HiTableCells,
-  HiMiniArchiveBox
+  HiMiniArchiveBox,
+  HiChatBubbleBottomCenterText,
 } from "react-icons/hi2";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import { MdOutlineSpeed } from "react-icons/md";
+import LossReasonModal from "../../../shared/LossReasonModal";
 
 const PAGE_SIZE = 10;
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-const fmtDate = (iso) => {
-  if (!iso) return "—";
-  const [y, m, d] = iso.slice(0, 10).split("-");
-  return `${d} ${MONTHS[+m - 1]} ${y}`;
-};
+const fmtEntryTime = (iso) =>
+  iso
+    ? new Date(iso).toLocaleString("en", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Bangkok",
+      })
+    : "—";
 const num = (v, dec = 2) =>
   v != null
     ? Number(v).toLocaleString("en", {
@@ -76,7 +70,7 @@ function StatCard({ label, value, Icon, colorClass, bgClass }) {
 function Th({ children, right}) {
   return (
     <th
-      className={`px-3 py-3 text-[11px] font-bold text-gray-700 uppercase tracking-wide  ${right ? "text-right" : "text-left"}`}
+      className={`px-2 py-2.5 text-[11px] font-bold text-gray-700 uppercase tracking-wide leading-tight ${right ? "text-right" : "text-left"}`}
     >
       {children}
     </th>
@@ -86,6 +80,7 @@ function Th({ children, right}) {
 export default function DlEffDetailTable({ data, loading, target }) {
   const [page, setPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [lossReasonModal, setLossReasonModal] = useState(null); // null | { text, meta }
 
   const totalPages = Math.ceil((data?.length ?? 0) / PAGE_SIZE);
   const sortedData = useMemo(() => {
@@ -267,9 +262,9 @@ export default function DlEffDetailTable({ data, loading, target }) {
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-700 ">
                 <Th>No</Th>
-                <Th>Date</Th>
+                <Th>Entry Time</Th>
                 <Th>Shift</Th>
-                <th className="px-3 py-3 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
                   <div className="flex items-center gap-1">
                     Machine
                     <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
@@ -284,7 +279,7 @@ export default function DlEffDetailTable({ data, loading, target }) {
                     </div>
                   </div>
                 </th>
-                <th className="px-3 py-3 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
                   <div className="flex items-center gap-1">
                     Product Code
                     <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
@@ -307,7 +302,7 @@ export default function DlEffDetailTable({ data, loading, target }) {
                 <Th right>Std Output</Th>
                 <Th right>Prod STD</Th>
                 <Th right>Prod AC</Th>
-                <th className="px-3 py-3 text-right text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2.5 text-right text-[12px] font-bold text-gray-600 uppercase tracking-wide">
                   <div className="flex items-center justify-end gap-1">
                     DL Eff %
                     <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
@@ -356,13 +351,13 @@ export default function DlEffDetailTable({ data, loading, target }) {
                     key={row.ID}
                     className={`transition-colors ${isMiss ? "bg-red-100/40 hover:bg-red-300/50" : "bg-green-100/40 hover:bg-green-300/50"}`}
                   >
-                    <td className="px-3 py-3 text-xs text-gray-700 tabular-nums">
+                    <td className="px-2 py-2.5 text-xs text-gray-700 tabular-nums">
                       {(page - 1) * PAGE_SIZE + idx + 1}
                     </td>
-                    <td className="px-3 py-3 text-xs font-medium text-gray-600">
-                      {fmtDate(row.PRODUCTION_DATE)}
+                    <td className="px-2 py-2.5 text-xs font-medium text-gray-600">
+                      {fmtEntryTime(row.ENTRY_TIME)}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-2 py-2.5">
                       {/* <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-blue-100 text-blue-700 text-xs font-black"> */}
                       <span
                         className={`${shiftColor.bg} ${shiftColor.text} ${shiftColor.border}
@@ -372,46 +367,58 @@ export default function DlEffDetailTable({ data, loading, target }) {
                         {row.SHIFT ?? "—"}
                       </span>
                     </td>
-                    <td className="px-3 py-3 font-semibold text-gray-700 text-xs">
+                    <td className="px-2 py-2.5 font-semibold text-gray-700 text-xs">
                       {row.MACHINE ?? "—"}
                     </td>
-                    <td className="px-3 py-3 text-xs font-mono text-gray-500">
+                    <td className="px-2 py-2.5 text-xs font-mono text-gray-500">
                       {row.PRODUCT_CODE ?? "—"}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-gray-600 text-xs">
-                      {num(row.MC_RUN_TIME, 1)}
+                    <td className="px-2 py-2.5 text-right tabular-nums text-gray-600 text-xs">
+                      {num(row.MC_RUN_TIME, 0)}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-gray-600 text-xs">
-                      {num(row.STD_HC, 1)}
+                    <td className="px-2 py-2.5 text-right tabular-nums text-gray-600 text-xs">
+                      {num(row.STD_HC, 0)}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums font-semibold text-gray-700 text-xs">
+                    <td className="px-2 py-2.5 text-right tabular-nums font-semibold text-gray-700 text-xs">
                       {row.ACTUAL_HC ?? "—"}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums font-semibold text-gray-800 text-xs">
+                    <td className="px-2 py-2.5 text-right tabular-nums font-semibold text-gray-800 text-xs">
                       {row.ACTUAL_OUTPUT != null
                         ? Number(row.ACTUAL_OUTPUT).toLocaleString()
                         : "—"}
                     </td>
-                    <td
-                      className="px-3 py-3 text-xs text-gray-500 "
-                      title={row.LOSS_REASON ?? ""}
-                    >
-                      {row.LOSS_REASON || "—"}
+                    <td className="px-2 py-2.5 text-center">
+                      {row.LOSS_REASON ? (
+                        <button
+                          onClick={() =>
+                            setLossReasonModal({
+                              text: row.LOSS_REASON,
+                              meta: [fmtEntryTime(row.ENTRY_TIME), row.MACHINE, row.PRODUCT_CODE],
+                            })
+                          }
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-amber-500 hover:bg-amber-100 hover:text-amber-600 transition cursor-pointer"
+                          title="View loss reason"
+                        >
+                          <HiChatBubbleBottomCenterText className="text-base" />
+                        </button>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-gray-600 text-xs">
+                    <td className="px-2 py-2.5 text-right tabular-nums text-gray-600 text-xs">
                       {row.STD_OUTPUT != null
                         ? Number(row.STD_OUTPUT).toLocaleString(undefined, {
                             maximumFractionDigits: 0,
                           })
                         : "—"}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-gray-500 text-xs">
+                    <td className="px-2 py-2.5 text-right tabular-nums text-gray-500 text-xs">
                       {num(row.productivity_std_pcs_mh)}
                     </td>
-                    <td className="px-3 py-3 text-right tabular-nums text-gray-500 text-xs">
+                    <td className="px-2 py-2.5 text-right tabular-nums text-gray-500 text-xs">
                       {num(row.productivity_ac_pcs_mh)}
                     </td>
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-2 py-2.5 text-right">
                       <StatusCell dlEff={row.dlEff} target={target} />
                     </td>
                   </tr>
@@ -478,6 +485,15 @@ export default function DlEffDetailTable({ data, loading, target }) {
           </div>
         )}
       </div>
+
+      {lossReasonModal && (
+        <LossReasonModal
+          title="Loss Reason"
+          text={lossReasonModal.text}
+          meta={lossReasonModal.meta}
+          onClose={() => setLossReasonModal(null)}
+        />
+      )}
     </div>
   );
 }

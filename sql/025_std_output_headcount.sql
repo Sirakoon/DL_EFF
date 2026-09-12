@@ -28,18 +28,36 @@
        Dashboard (sp_get_dl_eff_detail เดิมไม่เคย select std_output)
 ═══════════════════════════════════════════════════════════════════ */
 
-/* ── 1. std_output_v2: record เก่า = 0 (สูตรเดิม), record ใหม่ default = 1 (สูตรใหม่) ── */
+/* sqlcmd เปิด QUOTED_IDENTIFIER OFF โดย default — ต้องเปิดไว้ตั้งแต่ต้นไฟล์เพราะตาราง
+   มี computed column ที่ persisted/indexed อยู่แล้ว (std_output เดิม) */
+SET QUOTED_IDENTIFIER ON;
+GO
+
+/* ── 1. std_output_v2: record เก่า = 0 (สูตรเดิม), record ใหม่ default = 1 (สูตรใหม่) ──
+   แยก 2 batch (GO คั่น) เพราะ ALTER TABLE ADD คอลัมน์ใหม่แล้วอ้างถึงคอลัมน์นั้น
+   ในบล็อก IF/BEGIN เดียวกัน ทำให้ SQL Server compile-error "Invalid column name"
+   (deferred name resolution ใช้ไม่ได้กับคอลัมน์ที่เพิ่งเพิ่มเมื่ออยู่ใน control-of-flow
+   block เดียวกัน) ── */
 IF NOT EXISTS (
     SELECT 1 FROM sys.columns
     WHERE object_id = OBJECT_ID('fact_production_record') AND name = 'std_output_v2'
 )
 BEGIN
     ALTER TABLE fact_production_record ADD std_output_v2 BIT NULL;
-    UPDATE fact_production_record SET std_output_v2 = 0;
+    PRINT 'Added column fact_production_record.std_output_v2 (nullable, finalizing below)';
+END
+GO
+
+IF EXISTS (
+    SELECT 1 FROM sys.columns
+    WHERE object_id = OBJECT_ID('fact_production_record') AND name = 'std_output_v2' AND is_nullable = 1
+)
+BEGIN
+    UPDATE fact_production_record SET std_output_v2 = 0 WHERE std_output_v2 IS NULL;
     ALTER TABLE fact_production_record ALTER COLUMN std_output_v2 BIT NOT NULL;
     ALTER TABLE fact_production_record
         ADD CONSTRAINT df_fact_prod_std_output_v2 DEFAULT (1) FOR std_output_v2;
-    PRINT 'Added column fact_production_record.std_output_v2 (existing rows = 0, new rows default = 1)';
+    PRINT 'Finalized fact_production_record.std_output_v2 (existing rows = 0, new rows default = 1)';
 END
 GO
 

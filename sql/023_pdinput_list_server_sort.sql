@@ -15,6 +15,12 @@
      เสมอเพื่อให้ลำดับ deterministic ระหว่างหน้า
      ค่า default (ไม่ส่ง @sortBy) = production_date DESC, record_id DESC
      เหมือนเดิมทุกประการ — controller เดิมที่ไม่ส่งพารามิเตอร์ยังทำงานได้
+
+   แก้เพิ่ม (2026-09-12): ตอนเขียนใหม่ให้ sort ที่ server ลืมใส่คอลัมน์
+     loss_reason ใน SELECT ... INTO #filtered ทำให้ Data Records โชว์
+     Loss Reason เป็นค่าว่างเสมอ ทั้งที่ข้อมูลถูกบันทึกลง DB ถูกต้อง
+     (sp_add_production_record ไม่เคยมีปัญหา) — เพิ่มกลับเข้าไปแล้ว
+     ต้องรัน migration นี้ซ้ำ (CREATE OR ALTER รันซ้ำได้) เพื่อแก้ของเดิม
 ═══════════════════════════════════════════════════════════════════ */
 
 SET QUOTED_IDENTIFIER ON;
@@ -58,7 +64,7 @@ BEGIN
         product_group_name, product_code, product_description,
         mc_speed_pcs_hr, capacity_pcs_hr, oee_target,
         machine_run_time, std_hc, std_hour, hour_piece_rate,
-        actual_output, loss_hour, actual_bulk_hr, actual_pallet_hr,
+        actual_output, loss_hour, loss_reason, actual_bulk_hr, actual_pallet_hr,
         actual_assist_hr, actual_hc,
         cal_output_at_oee, std_output,
         productivity_std_pcs_mh, actual_hour, total_loss_hour,

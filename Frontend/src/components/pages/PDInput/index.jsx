@@ -10,6 +10,7 @@ import {
   HiXCircle,
   HiFunnel,
   HiArrowDownTray,
+  HiChatBubbleBottomCenterText,
 } from "react-icons/hi2";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import { TbLoader2, TbDatabaseOff } from "react-icons/tb";
@@ -24,30 +25,12 @@ import { useAuth } from "../../../context/AuthContext";
 import { useAutoRefresh } from "../../../hooks/useAutoRefresh";
 import PDInputModal from "./components/PDInputModal";
 import DeleteConfirm from "./components/DeleteConfirm";
+import LossReasonModal from "../../shared/LossReasonModal";
 import { todayStr as today, daysAgoStr as daysAgo } from "../../../utils/date";
 import Selected from "../../shared/Selected";
 import DatePicker from "../../shared/DatePicker";
 
 const PAGE_SIZE = 20;
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-const fmt = (iso) => {
-  if (!iso) return "—";
-  const [y, m, d] = iso.slice(0, 10).split("-");
-  return `${d} ${MONTHS[+m - 1]} ${y}`;
-};
 const fmtEntryTime = (iso) =>
   iso
     ? new Date(iso).toLocaleString("en", {
@@ -148,7 +131,7 @@ function DlBadge({ value, target = 3.1 }) {
 function Th({ children, right }) {
   return (
     <th
-      className={`px-4 py-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide ${right ? "text-right" : "text-left"}`}
+      className={`px-2 py-2.5 text-[11px] font-bold text-gray-600 uppercase tracking-wide leading-tight ${right ? "text-right" : "text-left"}`}
     >
       {children}
     </th>
@@ -179,6 +162,7 @@ export default function PDInputPage() {
 
   const [modal, setModal] = useState(null); // null | { mode:'create'|'edit', data? }
   const [delRow, setDelRow] = useState(null);
+  const [lossReasonModal, setLossReasonModal] = useState(null); // null | { text, meta }
   const [lastUpdated, setLastUpdated] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   /* load filter options once */
@@ -527,10 +511,9 @@ export default function PDInputPage() {
               <thead className="bg-gray-50/80 border-b border-gray-200">
                 <tr>
                   <Th>No</Th>
-                  <Th>Date</Th>
                   <Th>Entry Time</Th>
                   <Th>Shift</Th>
-                  <th className="px-3 py-3 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                  <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide leading-tight">
                     <div className="flex items-center gap-1">
                       Machine
                       <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
@@ -546,7 +529,7 @@ export default function PDInputPage() {
                     </div>
                   </th>
                   <Th>Product Group</Th>
-                  <th className="px-3 py-3 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                  <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide leading-tight">
                     <div className="flex items-center gap-1">
                       Product Code
                       <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
@@ -562,6 +545,7 @@ export default function PDInputPage() {
                     </div>
                   </th>
                   <Th right>Run Time</Th>
+                  <Th right>Std HC</Th>
                   <Th right>Actual HC</Th>
                   <Th right>Actual Output</Th>
                   <Th right>Loss Hr</Th>
@@ -569,7 +553,7 @@ export default function PDInputPage() {
                   <Th right>Std Output</Th>
                   <Th right>Prod STD</Th>
                   <Th right>Prod AC</Th>
-                  <th className="px-3 py-3 text-right text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                  <th className="px-2 py-2.5 text-right text-[12px] font-bold text-gray-600 uppercase tracking-wide leading-tight">
                     <div className="flex items-center justify-end gap-1">
                       DL Eff %
                       <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
@@ -593,16 +577,13 @@ export default function PDInputPage() {
                     key={row.record_id}
                     className={`transition-colors ${row.dl_eff_percent != null && row.dl_eff_percent < 3.1 ? "bg-red-100/40 hover:bg-red-300/50" : "bg-green-100/40 hover:bg-green-300/50"}`}
                   >
-                    <td className="px-4 py-3 text-xs text-gray-900 tabular-nums">
+                    <td className="px-2 py-2.5 text-xs text-gray-900 tabular-nums">
                       {(page - 1) * PAGE_SIZE + idx + 1}
                     </td>
-                    <td className="px-4 py-3 text-xs font-medium text-gray-600 ">
-                      {fmt(row.production_date)}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+                    <td className="px-2 py-2.5 text-xs text-gray-500">
                       {fmtEntryTime(row.entry_datetime)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-2.5">
                       {(() => {
                         const c =
                           colorShift[row.shift_code] ?? DEFAULT_BADGE_COLOR;
@@ -615,10 +596,10 @@ export default function PDInputPage() {
                         );
                       })()}
                     </td>
-                    <td className="px-4 py-3 font-semibold text-gray-800">
+                    <td className="px-2 py-2.5 font-semibold text-gray-800">
                       {row.machine_code}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-2.5">
                       {(() => {
                         const c =
                           colorProductGroup[row.product_group_name] ??
@@ -632,47 +613,62 @@ export default function PDInputPage() {
                         );
                       })()}
                     </td>
-                    <td className="px-4 py-3 text-xs font-mono text-gray-600">
+                    <td className="px-2 py-2.5 text-xs font-mono text-gray-600">
                       {row.product_code}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-gray-600">
-                      {num(row.machine_run_time, 1)}
+                    <td className="px-2 py-2.5 text-right tabular-nums text-gray-600">
+                      {num(row.machine_run_time, 0)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-gray-600">
+                    <td className="px-2 py-2.5 text-right tabular-nums text-gray-600">
+                      {num(row.std_hc, 0)}
+                    </td>
+                    <td className="px-2 py-2.5 text-right tabular-nums text-gray-600">
                       {row.actual_hc ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-semibold text-gray-800">
+                    <td className="px-2 py-2.5 text-right tabular-nums font-semibold text-gray-800">
                       {row.actual_output != null
                         ? Number(row.actual_output).toLocaleString()
                         : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-gray-500">
-                      {num(row.loss_hour)}
+                    <td className="px-2 py-2.5 text-right tabular-nums text-gray-500">
+                      {num(row.loss_hour, 0)}
                     </td>
-                    <td
-                      className="px-4 py-3 text-xs text-gray-500 max-w-[160px] truncate"
-                      title={row.loss_reason ?? ""}
-                    >
-                      {row.loss_reason || "—"}
+                    <td className="px-2 py-2.5 text-center">
+                      {row.loss_reason ? (
+                        <button
+                          onClick={() =>
+                            setLossReasonModal({
+                              text: row.loss_reason,
+                              meta: [fmtEntryTime(row.entry_datetime), row.machine_code, row.product_code],
+                            })
+                          }
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-amber-500 hover:bg-amber-100 hover:text-amber-600 transition cursor-pointer"
+                          title="View loss reason"
+                        >
+                          <HiChatBubbleBottomCenterText className="text-base" />
+                        </button>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-gray-600">
+                    <td className="px-2 py-2.5 text-right tabular-nums text-gray-600">
                       {row.std_output != null
                         ? Number(row.std_output).toLocaleString(undefined, {
                             maximumFractionDigits: 0,
                           })
                         : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-gray-500">
+                    <td className="px-2 py-2.5 text-right tabular-nums text-gray-500">
                       {num(row.productivity_std_pcs_mh)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-gray-500">
+                    <td className="px-2 py-2.5 text-right tabular-nums text-gray-500">
                       {num(row.productivity_ac_pcs_mh)}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-2 py-2.5 text-right">
                       <DlBadge value={row.dl_eff_percent} target={3.1} />
                     </td>
                     {canEdit && (
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-2.5">
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() =>
@@ -791,6 +787,14 @@ export default function PDInputPage() {
           record={delRow}
           onClose={() => setDelRow(null)}
           onDeleted={handleSaved}
+        />
+      )}
+      {lossReasonModal && (
+        <LossReasonModal
+          title="Loss Reason"
+          text={lossReasonModal.text}
+          meta={lossReasonModal.meta}
+          onClose={() => setLossReasonModal(null)}
         />
       )}
     </div>
