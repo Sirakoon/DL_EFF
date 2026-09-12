@@ -304,6 +304,7 @@ export default function DlEffDetailTable({ data, loading, target }) {
                 <Th right>Actual HC</Th>
                 <Th right>Actual Output</Th>
                 <Th>Loss Reason</Th>
+                <Th right>Std Output</Th>
                 <Th right>Prod STD</Th>
                 <Th right>Prod AC</Th>
                 <th className="px-3 py-3 text-right text-[12px] font-bold text-gray-600 uppercase tracking-wide">
@@ -396,6 +397,13 @@ export default function DlEffDetailTable({ data, loading, target }) {
                       title={row.LOSS_REASON ?? ""}
                     >
                       {row.LOSS_REASON || "—"}
+                    </td>
+                    <td className="px-3 py-3 text-right tabular-nums text-gray-600 text-xs">
+                      {row.STD_OUTPUT != null
+                        ? Number(row.STD_OUTPUT).toLocaleString(undefined, {
+                            maximumFractionDigits: 0,
+                          })
+                        : "—"}
                     </td>
                     <td className="px-3 py-3 text-right tabular-nums text-gray-500 text-xs">
                       {num(row.productivity_std_pcs_mh)}

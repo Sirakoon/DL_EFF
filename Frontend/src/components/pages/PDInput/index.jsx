@@ -48,6 +48,17 @@ const fmt = (iso) => {
   const [y, m, d] = iso.slice(0, 10).split("-");
   return `${d} ${MONTHS[+m - 1]} ${y}`;
 };
+const fmtEntryTime = (iso) =>
+  iso
+    ? new Date(iso).toLocaleString("en", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Bangkok",
+      })
+    : "—";
 const num = (v, d = 2) =>
   v != null
     ? Number(v).toLocaleString("en", {
@@ -517,6 +528,7 @@ export default function PDInputPage() {
                 <tr>
                   <Th>No</Th>
                   <Th>Date</Th>
+                  <Th>Entry Time</Th>
                   <Th>Shift</Th>
                   <th className="px-3 py-3 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
                     <div className="flex items-center gap-1">
@@ -554,6 +566,7 @@ export default function PDInputPage() {
                   <Th right>Actual Output</Th>
                   <Th right>Loss Hr</Th>
                   <Th>Loss Reason</Th>
+                  <Th right>Std Output</Th>
                   <Th right>Prod STD</Th>
                   <Th right>Prod AC</Th>
                   <th className="px-3 py-3 text-right text-[12px] font-bold text-gray-600 uppercase tracking-wide">
@@ -585,6 +598,9 @@ export default function PDInputPage() {
                     </td>
                     <td className="px-4 py-3 text-xs font-medium text-gray-600 ">
                       {fmt(row.production_date)}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+                      {fmtEntryTime(row.entry_datetime)}
                     </td>
                     <td className="px-4 py-3">
                       {(() => {
@@ -638,6 +654,13 @@ export default function PDInputPage() {
                       title={row.loss_reason ?? ""}
                     >
                       {row.loss_reason || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-gray-600">
+                      {row.std_output != null
+                        ? Number(row.std_output).toLocaleString(undefined, {
+                            maximumFractionDigits: 0,
+                          })
+                        : "—"}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums text-gray-500">
                       {num(row.productivity_std_pcs_mh)}
