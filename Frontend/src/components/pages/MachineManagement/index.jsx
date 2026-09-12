@@ -162,14 +162,14 @@ export default function MachineManagementPage() {
               <thead className="bg-gray-50/80 border-b border-gray-200">
                 <tr>
                   <th
-                    className={`px-4 py-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide flex items-center justify-start`}
+                    className={`px-4 py-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide w-12`}
                   >
                     No
                   </th>
                   <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                     <div className="flex items-center gap-1">
                       Machine Code
-                      <div className="flex flex-col text-lg -space-y-1 cursor-pointer">
+                      <div className="flex flex-col text-[16px] -space-y-1 cursor-pointer">
                         <IoMdArrowDropup
                           className={`hover:text-teal-600 transition-colors text-sm ${sortOrder === "desc" ? "text-teal-600" : "text-gray-400"}`}
                           onClick={() => sortMachine(false)}

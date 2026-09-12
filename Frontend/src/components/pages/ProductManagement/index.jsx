@@ -199,7 +199,7 @@ export default function ProductManagementPage() {
                     <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                       <div className="flex items-center gap-1">
                         Product Code
-                        <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                        <div className="flex flex-col text-[16px] -space-y-2 cursor-pointer">
                           <IoMdArrowDropup
                             className={`hover:text-teal-600 transition-colors ${sortConfig.key === "product_code" && sortConfig.direction === "desc" ? "text-teal-600" : "text-gray-400"}`}
                             onClick={() => handleSort("product_code", false)}
@@ -217,7 +217,7 @@ export default function ProductManagementPage() {
                     <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                       <div className="flex items-center gap-1">
                         Product Group
-                        <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                        <div className="flex flex-col text-[16px] -space-y-2 cursor-pointer">
                           <IoMdArrowDropup
                             className={`hover:text-teal-600 transition-colors ${sortConfig.key === "product_group_name" && sortConfig.direction === "desc" ? "text-teal-600" : "text-gray-400"}`}
                             onClick={() =>
@@ -233,10 +233,10 @@ export default function ProductManagementPage() {
                         </div>
                       </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
+                    <th className="px-6 py-3 text-center text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                       Capacity (Pcs/man-hr)
                     </th>
-                    <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
+                    <th className="px-6 py-3 text-center text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                       MC Speed (Pcs/hr)
                     </th>
                     <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
@@ -273,10 +273,10 @@ export default function ProductManagementPage() {
                           {e.product_group_name}
                         </span>
                       </td>
-                      <td className="px-6 py-3 text-gray-700 tabular-nums">
+                      <td className="px-6 py-3 text-center text-gray-700 tabular-nums">
                         {e.capacity_pcs_hr ?? "-"}
                       </td>
-                      <td className="px-6 py-3 text-gray-700 tabular-nums">
+                      <td className="px-6 py-3 text-center text-gray-700 tabular-nums">
                         {e.mc_speed_pcs_hr ?? "-"}
                       </td>
                       <td className="px-6 py-3">

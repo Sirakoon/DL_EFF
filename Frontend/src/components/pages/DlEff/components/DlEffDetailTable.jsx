@@ -67,12 +67,12 @@ function StatCard({ label, value, Icon, colorClass, bgClass }) {
   );
 }
 
-function Th({ children, right}) {
+function Th({ children, right }) {
   return (
     <th
       className={`px-2 py-2.5 text-[11px] font-bold text-gray-700 uppercase tracking-wide leading-tight ${right ? "text-right" : "text-left"}`}
     >
-      {children}
+      <div className="flex justify-center">{children}</div>
     </th>
   );
 }
@@ -198,8 +198,8 @@ export default function DlEffDetailTable({ data, loading, target }) {
   ).length;
   const noDataCount = data.filter((r) => r.dlEff == null).length;
   const actualOutputSummary = data
-  .filter((r) => r.dlEff != null )
-  .reduce((sum, r) => sum + Number(r.ACTUAL_OUTPUT), 0);
+    .filter((r) => r.dlEff != null)
+    .reduce((sum, r) => sum + Number(r.ACTUAL_OUTPUT), 0);
 
   const handleSort = (key, isAscending) => {
     setSortConfig({
@@ -211,7 +211,7 @@ export default function DlEffDetailTable({ data, loading, target }) {
   return (
     <div className="space-y-4">
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <StatCard
           label="Total Records"
           value={data.length.toLocaleString()}
@@ -267,12 +267,12 @@ export default function DlEffDetailTable({ data, loading, target }) {
         <div className="w-full">
           <table className="w-full text-sm break-words">
             <thead>
-              <tr className="bg-gray-50/80 border-b border-gray-700 ">
+              <tr className="bg-gray-50/80 border-b border-gray-200 ">
                 <Th>No</Th>
-                <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2.5 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide flex justify-center h-full">
                   <div className="flex items-center gap-1">
                     Date
-                    <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                    <div className="flex flex-col text-[16px] -space-y-2 cursor-pointer">
                       <IoMdArrowDropup
                         className={`hover:text-blue-600 transition-colors ${sortConfig.key === "ENTRY_TIME" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
                         onClick={() => handleSort("ENTRY_TIME", true)}
@@ -285,10 +285,10 @@ export default function DlEffDetailTable({ data, loading, target }) {
                   </div>
                 </th>
                 <Th>Shift</Th>
-                <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2.5 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                   <div className="flex items-center gap-1">
                     Machine
-                    <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                    <div className="flex flex-col text-[16px] -space-y-2 cursor-pointer">
                       <IoMdArrowDropup
                         className={`hover:text-blue-600 transition-colors ${sortConfig.key === "MACHINE" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
                         onClick={() => handleSort("MACHINE", true)}
@@ -300,10 +300,10 @@ export default function DlEffDetailTable({ data, loading, target }) {
                     </div>
                   </div>
                 </th>
-                <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2.5 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                   <div className="flex items-center gap-1">
                     Product Code
-                    <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                    <div className="flex flex-col text-[16px] -space-y-2 cursor-pointer">
                       <IoMdArrowDropup
                         className={`hover:text-blue-600 transition-colors ${sortConfig.key === "PRODUCT_CODE" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
                         onClick={() => handleSort("PRODUCT_CODE", true)}
@@ -323,10 +323,10 @@ export default function DlEffDetailTable({ data, loading, target }) {
                 <Th right>Std Output</Th>
                 <Th right>Prod STD</Th>
                 <Th right>Prod AC</Th>
-                <th className="px-2 py-2.5 text-right text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2.5 text-right text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                   <div className="flex items-center justify-end gap-1">
                     DL Eff %
-                    <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                    <div className="flex flex-col text-[16px] -space-y-2 cursor-pointer">
                       <IoMdArrowDropup
                         className={`hover:text-blue-600 transition-colors ${sortConfig.key === "dlEff" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
                         onClick={() => handleSort("dlEff", true)}
@@ -414,7 +414,11 @@ export default function DlEffDetailTable({ data, loading, target }) {
                           onClick={() =>
                             setLossReasonModal({
                               text: row.LOSS_REASON,
-                              meta: [fmtEntryTime(row.ENTRY_TIME), row.MACHINE, row.PRODUCT_CODE],
+                              meta: [
+                                fmtEntryTime(row.ENTRY_TIME),
+                                row.MACHINE,
+                                row.PRODUCT_CODE,
+                              ],
                             })
                           }
                           className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-amber-500 hover:bg-amber-100 hover:text-amber-600 transition cursor-pointer"

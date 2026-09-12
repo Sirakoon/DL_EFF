@@ -326,10 +326,10 @@ export default function UserManagementPage() {
                   <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wide">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wide">
+                  <th className="px-6 py-3 text-center text-[11px] font-bold text-gray-400 uppercase tracking-wide">
                     Created
                   </th>
-                  <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wide">
+                  <th className="px-6 py-3 text-center text-[11px] font-bold text-gray-400 uppercase tracking-wide">
                     Last Login
                   </th>
                   <th className="px-6 py-3 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wide">
@@ -360,10 +360,10 @@ export default function UserManagementPage() {
                         {u.status}
                       </span>
                     </td>
-                    <td className="px-6 py-3 text-xs text-gray-500">
+                    <td className="px-6 py-3 text-xs text-gray-500 text-center">
                       {fmtDateTime(u.created_at)}
                     </td>
-                    <td className="px-6 py-3 text-xs text-gray-500">
+                    <td className="px-6 py-3 text-xs text-gray-500 text-center">
                       {fmtDateTime(u.last_login)}
                     </td>
                     <td className="px-6 py-3 text-right">

@@ -511,10 +511,10 @@ export default function PDInputPage() {
               <thead className="bg-gray-50/80 border-b border-gray-200">
                 <tr>
                   <Th>No</Th>
-                  <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide leading-tight">
+                  <th className="px-2 py-2.5 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide leading-tight flex justify-center">
                     <div className="flex items-center gap-1">
                       Date
-                      <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                      <div className="flex flex-col text-[16px] -space-y-2 cursor-pointer">
                         <IoMdArrowDropup
                           className={`hover:text-blue-600 transition-colors ${sortConfig.key === "production_date" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
                           onClick={() => handleSort("production_date", true)}
@@ -527,10 +527,10 @@ export default function PDInputPage() {
                     </div>
                   </th>
                   <Th>Shift</Th>
-                  <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide leading-tight">
+                  <th className="px-2 py-2.5 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide leading-tight">
                     <div className="flex items-center gap-1">
                       Machine
-                      <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                      <div className="flex flex-col text-[16px] -space-y-2 cursor-pointer">
                         <IoMdArrowDropup
                           className={`hover:text-blue-600 transition-colors ${sortConfig.key === "machine_code" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
                           onClick={() => handleSort("machine_code", true)}
@@ -543,10 +543,10 @@ export default function PDInputPage() {
                     </div>
                   </th>
                   <Th>Product Group</Th>
-                  <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide leading-tight">
+                  <th className="px-2 py-2.5 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide leading-tight">
                     <div className="flex items-center gap-1">
                       Product Code
-                      <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                      <div className="flex flex-col text-[16px] -space-y-2 cursor-pointer">
                         <IoMdArrowDropup
                           className={`hover:text-blue-600 transition-colors ${sortConfig.key === "product_code" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
                           onClick={() => handleSort("product_code", true)}
@@ -567,10 +567,10 @@ export default function PDInputPage() {
                   <Th right>Std Output</Th>
                   <Th right>Prod STD</Th>
                   <Th right>Prod AC</Th>
-                  <th className="px-2 py-2.5 text-right text-[12px] font-bold text-gray-600 uppercase tracking-wide leading-tight">
+                  <th className="px-2 py-2.5 text-right text-[11px] font-bold text-gray-600 uppercase tracking-wide leading-tight">
                     <div className="flex items-center justify-end gap-1">
                       DL Eff %
-                      <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                      <div className="flex flex-col text-[16px] -space-y-2 cursor-pointer">
                         <IoMdArrowDropup
                           className={`hover:text-blue-600 transition-colors ${sortConfig.key === "dl_eff_percent" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
                           onClick={() => handleSort("dl_eff_percent", true)}
