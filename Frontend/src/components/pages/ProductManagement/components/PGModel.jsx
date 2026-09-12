@@ -64,7 +64,6 @@ export default function ProductGroupModal({ mode, initialData, onClose, onSaved 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 flex-shrink-0"></div>

@@ -8,7 +8,7 @@ import { HiXMark, HiChatBubbleBottomCenterText } from 'react-icons/hi2';
 export default function LossReasonModal({ title = 'Loss Reason', text, meta = [], onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="p-7">
           <div className="flex items-start gap-4 mb-5">
