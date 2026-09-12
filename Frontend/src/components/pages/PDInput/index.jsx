@@ -46,7 +46,8 @@ const MONTHS = [
 const fmt = (iso) => {
   if (!iso) return "—";
   const [y, m, d] = iso.slice(0, 10).split("-");
-  return `${d} ${MONTHS[+m - 1]} ${y}`;
+  const timePart = iso.slice(11, 16);
+  return `${d} ${MONTHS[+m - 1]} ${y} ${timePart}`;
 };
 const num = (v, d = 2) =>
   v != null
@@ -137,7 +138,7 @@ function DlBadge({ value, target = 3.1 }) {
 function Th({ children, right }) {
   return (
     <th
-      className={`px-4 py-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap ${right ? "text-right" : "text-left"}`}
+      className={`px-4 py-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide ${right ? "text-right" : "text-left"}`}
     >
       {children}
     </th>
@@ -510,7 +511,7 @@ export default function PDInputPage() {
           </div>
         ) : (
           <div
-            className={`overflow-x-auto transition-opacity duration-200 ${refreshing ? "opacity-60" : "opacity-100"}`}
+            className={`w-full transition-opacity duration-200 ${refreshing ? "opacity-60" : "opacity-100"}`}
           >
             <table className="w-full text-sm">
               <thead className="bg-gray-50/80 border-b border-gray-200">
@@ -583,7 +584,7 @@ export default function PDInputPage() {
                     <td className="px-4 py-3 text-xs text-gray-900 tabular-nums">
                       {(page - 1) * PAGE_SIZE + idx + 1}
                     </td>
-                    <td className="px-4 py-3 text-xs font-medium text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-3 text-xs font-medium text-gray-600 ">
                       {fmt(row.production_date)}
                     </td>
                     <td className="px-4 py-3">

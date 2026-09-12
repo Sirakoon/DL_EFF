@@ -63,19 +63,19 @@ const colorShift = {
     text: "text-amber-600",
     bg: "bg-amber-100",
     border: "border-amber-100",
-    hoverBorder:"hover:border-amber-300"
+    hoverBorder: "hover:border-amber-300",
   },
   B: {
     text: "text-emerald-600",
     bg: "bg-emerald-100",
     border: "border-emerald-100",
-    hoverBorder:"hover:border-emerald-300"
+    hoverBorder: "hover:border-emerald-300",
   },
   C: {
     text: "text-indigo-600",
     bg: "bg-indigo-100",
     border: "border-indigo-100",
-    hoverBorder:"hover:border-indigo-300"
+    hoverBorder: "hover:border-indigo-300",
   },
 };
 
@@ -96,7 +96,7 @@ const MONTHS = [
 const fmtDate = (iso) => {
   if (!iso) return "—";
   const [y, m, d] = iso.slice(0, 10).split("-");
-  return `${d} ${MONTHS[+m - 1]} ${y}`;
+  return `${d} ${MONTHS[+m - 1]} ${y} `;
 };
 
 // Half-circle gauge — plain SVG arc (no chart library), same 0..target*2 scale as the DL Eff bar.
@@ -432,10 +432,10 @@ export default function DlEffDashboard() {
                     onClick={() => setShift(v)}
                     className={`h-10 px-4 rounded-xl text-sm font-bold border-2 transition-all cursor-pointer ${
                       shift === v
-                       ? v == ""
-                        ? "bg-blue-800 text-blue-50 border-blue-800 shadow-md"
-                        : `${colorShift[v].bg} ${colorShift[v].border} ${colorShift[v].text} shadow-md`
-                      : `bg-white text-gray-500 border-gray-200 ${v==""?'hover:border-blue-800':`${colorShift[v].hoverBorder}`}`
+                        ? v == ""
+                          ? "bg-blue-800 text-blue-50 border-blue-800 shadow-md"
+                          : `${colorShift[v].bg} ${colorShift[v].border} ${colorShift[v].text} shadow-md`
+                        : `bg-white text-gray-500 border-gray-200 ${v == "" ? "hover:border-blue-800" : `${colorShift[v].hoverBorder}`}`
                     }`}
                   >
                     {l}
@@ -532,12 +532,18 @@ export default function DlEffDashboard() {
                 //   background: THEME[selected.mainGroup]?.text ?? "#3b82f6",
                 // }}
               >
-                {selected.subGroup} 
+                {selected.subGroup}
               </span>
-              <span className={`${THEME[selected.mainGroup]?.text ?? "#3b82f6"} text-sm font-bold`}>
+              <span
+                className={`${THEME[selected.mainGroup]?.text ?? "#3b82f6"} text-sm font-bold`}
+              >
                 {selected.mainGroup}
               </span>
-              <span className={`${THEME[selected.mainGroup]?.text ?? "#3b82f6"} text-sm`}>·</span>
+              <span
+                className={`${THEME[selected.mainGroup]?.text ?? "#3b82f6"} text-sm`}
+              >
+                ·
+              </span>
               <span className="text-gray-500 text-sm">
                 {fmtDate(dateFrom)}
                 {period !== "daily" ? ` – ${fmtDate(dateTo)}` : ""}
@@ -545,7 +551,7 @@ export default function DlEffDashboard() {
             </div>
             <button
               onClick={() => setSelected(null)}
-              className='h-10 flex items-center gap-2 px-4 text-sm font-bold rounded-xl border-2 transition-all text-red-500 border-red-300 bg-red-50 hover:border-red-300 hover:text-red-800 hover:bg-red-100 cursor-pointer'
+              className="h-10 flex items-center gap-2 px-4 text-sm font-bold rounded-xl border-2 transition-all text-red-500 border-red-300 bg-red-50 hover:border-red-300 hover:text-red-800 hover:bg-red-100 cursor-pointer"
             >
               <HiXMark className="text-base" />
               Close

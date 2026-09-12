@@ -5,6 +5,7 @@ import {
   HiChevronLeft,
   HiChevronRight,
   HiTableCells,
+  HiMiniArchiveBox
 } from "react-icons/hi2";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import { MdOutlineSpeed } from "react-icons/md";
@@ -27,7 +28,8 @@ const MONTHS = [
 const fmtDate = (iso) => {
   if (!iso) return "—";
   const [y, m, d] = iso.slice(0, 10).split("-");
-  return `${d} ${MONTHS[+m - 1]} ${y}`;
+  const timePart = iso.slice(11, 16); 
+  return `${d} ${MONTHS[+m - 1]} ${y} ${timePart}`;
 };
 const num = (v, dec = 2) =>
   v != null
@@ -75,7 +77,7 @@ function StatCard({ label, value, Icon, colorClass, bgClass }) {
 function Th({ children, right}) {
   return (
     <th
-      className={`px-3 py-3 text-[11px] font-bold text-gray-700 uppercase tracking-wide whitespace-nowrap ${right ? "text-right" : "text-left"}`}
+      className={`px-3 py-3 text-[11px] font-bold text-gray-700 uppercase tracking-wide  ${right ? "text-right" : "text-left"}`}
     >
       {children}
     </th>
@@ -194,6 +196,9 @@ export default function DlEffDetailTable({ data, loading, target }) {
     (r) => r.dlEff != null && target != null && r.dlEff < target,
   ).length;
   const noDataCount = data.filter((r) => r.dlEff == null).length;
+  const actualOutputSummary = data
+  .filter((r) => r.dlEff != null )
+  .reduce((sum, r) => sum + Number(r.ACTUAL_OUTPUT), 0);
 
   const handleSort = (key, isAscending) => {
     setSortConfig({
@@ -227,6 +232,13 @@ export default function DlEffDetailTable({ data, loading, target }) {
           colorClass="text-red-500"
           bgClass="bg-red-50 border border-red-100"
         />
+        <StatCard
+          label="Summary ActualOutput"
+          value={actualOutputSummary.toLocaleString()}
+          Icon={HiMiniArchiveBox}
+          colorClass="text-indigo-500"
+          bgClass="bg-indigo-50 border border-indigo-100"
+        />
       </div>
 
       {/* Table */}
@@ -251,8 +263,8 @@ export default function DlEffDetailTable({ data, loading, target }) {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="w-full">
+          <table className="w-full text-sm break-words">
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-700 ">
                 <Th>No</Th>
@@ -347,7 +359,7 @@ export default function DlEffDetailTable({ data, loading, target }) {
                     <td className="px-3 py-3 text-xs text-gray-700 tabular-nums">
                       {(page - 1) * PAGE_SIZE + idx + 1}
                     </td>
-                    <td className="px-3 py-3 text-xs font-medium text-gray-600 whitespace-nowrap">
+                    <td className="px-3 py-3 text-xs font-medium text-gray-600">
                       {fmtDate(row.PRODUCTION_DATE)}
                     </td>
                     <td className="px-3 py-3">
@@ -381,7 +393,7 @@ export default function DlEffDetailTable({ data, loading, target }) {
                         : "—"}
                     </td>
                     <td
-                      className="px-3 py-3 text-xs text-gray-500 max-w-[160px] truncate"
+                      className="px-3 py-3 text-xs text-gray-500 "
                       title={row.LOSS_REASON ?? ""}
                     >
                       {row.LOSS_REASON || "—"}
