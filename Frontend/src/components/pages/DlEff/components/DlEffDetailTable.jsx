@@ -105,6 +105,13 @@ export default function DlEffDetailTable({ data, loading, target }) {
           return sortConfig.direction === "asc" ? valA - valB : valB - valA;
         }
 
+        // กรณีที่เป็นวันที่ (Entry Time)
+        if (sortConfig.key === "ENTRY_TIME") {
+          const timeA = new Date(valA).getTime();
+          const timeB = new Date(valB).getTime();
+          return sortConfig.direction === "asc" ? timeA - timeB : timeB - timeA;
+        }
+
         // กรณีที่เป็น String (Machine, Product Code)
         const strA = String(valA);
         const strB = String(valB);
@@ -262,7 +269,21 @@ export default function DlEffDetailTable({ data, loading, target }) {
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-700 ">
                 <Th>No</Th>
-                <Th>Entry Time</Th>
+                <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
+                  <div className="flex items-center gap-1">
+                    Date
+                    <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                      <IoMdArrowDropup
+                        className={`hover:text-blue-600 transition-colors ${sortConfig.key === "ENTRY_TIME" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
+                        onClick={() => handleSort("ENTRY_TIME", true)}
+                      />
+                      <IoMdArrowDropdown
+                        className={`hover:text-blue-600 transition-colors ${sortConfig.key === "ENTRY_TIME" && sortConfig.direction === "desc" ? "text-blue-600" : "text-gray-300"}`}
+                        onClick={() => handleSort("ENTRY_TIME", false)}
+                      />
+                    </div>
+                  </div>
+                </th>
                 <Th>Shift</Th>
                 <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide">
                   <div className="flex items-center gap-1">

@@ -15,7 +15,6 @@ const getEmptyForm = () => ({
   product_description: "",
   capacity_pcs_hr: "",
   mc_speed_pcs_hr: "",
-  product_people: "",
   is_active: 1,
 });
 
@@ -42,7 +41,6 @@ export default function ProductModal({ mode, initialData, onClose, onSaved }) {
         product_description: initialData.product_description ?? "",
         capacity_pcs_hr: initialData.capacity_pcs_hr ?? "",
         mc_speed_pcs_hr: initialData.mc_speed_pcs_hr ?? "",
-        product_people: initialData.product_people ?? "",
         is_active: initialData.is_active ?? 1,
       });
     }
@@ -65,7 +63,6 @@ export default function ProductModal({ mode, initialData, onClose, onSaved }) {
     };
     rng("capacity_pcs_hr", 0);
     rng("mc_speed_pcs_hr", 0);
-    rng("product_people", 0);
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -148,7 +145,7 @@ export default function ProductModal({ mode, initialData, onClose, onSaved }) {
                 </div>
                 <Field
                   label="Capacity"
-                  hint="Pcs/hr · Manual machine"
+                  hint="Pcs/man-hr · Manual machine"
                   error={errors.capacity_pcs_hr}
                 >
                   <TInput
@@ -160,43 +157,20 @@ export default function ProductModal({ mode, initialData, onClose, onSaved }) {
                     hasError={!!errors.capacity_pcs_hr}
                   />
                 </Field>
-                {form.product_group_id == 7 ? (
-                  <Field
-                    label="People"
-                    hint="People Use Manual machine"
-                    error={errors.product_people}
-                  >
-                    <TInput
-                      type="number"
-                      value={form.product_people}
-                      onChange={set("product_people")}
-                      step="0.01"
-                      min={0}
-                      hasError={!!errors.product_people}
-                    />
-                  </Field>
-                ) : (
-                  null
-                )}
-
-                <div
-                  className={`${form.product_group_id == 7 ? "col-span-2" : "col-span-1"}`}
+                <Field
+                  label="MC Speed"
+                  hint="Pcs/hr · Auto machine"
+                  error={errors.mc_speed_pcs_hr}
                 >
-                  <Field
-                    label="MC Speed"
-                    hint="Pcs/hr · Auto machine"
-                    error={errors.mc_speed_pcs_hr}
-                  >
-                    <TInput
-                      type="number"
-                      value={form.mc_speed_pcs_hr}
-                      onChange={set("mc_speed_pcs_hr")}
-                      step="0.01"
-                      min={0}
-                      hasError={!!errors.mc_speed_pcs_hr}
-                    />
-                  </Field>
-                </div>
+                  <TInput
+                    type="number"
+                    value={form.mc_speed_pcs_hr}
+                    onChange={set("mc_speed_pcs_hr")}
+                    step="0.01"
+                    min={0}
+                    hasError={!!errors.mc_speed_pcs_hr}
+                  />
+                </Field>
                 {isEdit && (
                   <div className="col-span-2">
                     <Field label="Status" required>

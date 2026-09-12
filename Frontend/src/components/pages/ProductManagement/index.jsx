@@ -212,13 +212,10 @@ export default function ProductManagementPage() {
                       </div>
                     </th>
                     <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
-                      Capacity (Pcs/hr)
+                      Capacity (Pcs/man-hr)
                     </th>
                     <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                       MC Speed (Pcs/hr)
-                    </th>
-                    <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
-                      People
                     </th>
                     <th className="px-6 py-3 text-left text-[11px] font-bold text-gray-600 uppercase tracking-wide">
                       status
@@ -259,9 +256,6 @@ export default function ProductManagementPage() {
                       </td>
                       <td className="px-6 py-3 text-gray-700 tabular-nums">
                         {e.mc_speed_pcs_hr ?? "-"}
-                      </td>
-                      <td className="px-6 py-3 text-gray-700 tabular-nums">
-                        {e.product_people ?? "-"}
                       </td>
                       <td className="px-6 py-3">
                         <span

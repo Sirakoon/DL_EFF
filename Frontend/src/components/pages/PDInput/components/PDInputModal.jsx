@@ -311,7 +311,7 @@ export default function PDInputModal({ mode, initialData, onClose, onSaved }) {
                     </div>
                     <div>
                       <SubLabel>Capacity</SubLabel>
-                      <AutoTag label="Pcs / hr" value={selectedProduct?.capacity_pcs_hr} />
+                      <AutoTag label="Pcs / man-hr" value={selectedProduct?.capacity_pcs_hr} />
                     </div>
                   </div>
                 </div>

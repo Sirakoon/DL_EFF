@@ -511,7 +511,21 @@ export default function PDInputPage() {
               <thead className="bg-gray-50/80 border-b border-gray-200">
                 <tr>
                   <Th>No</Th>
-                  <Th>Entry Time</Th>
+                  <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide leading-tight">
+                    <div className="flex items-center gap-1">
+                      Date
+                      <div className="flex flex-col text-lg -space-y-2 cursor-pointer">
+                        <IoMdArrowDropup
+                          className={`hover:text-blue-600 transition-colors ${sortConfig.key === "production_date" && sortConfig.direction === "asc" ? "text-blue-600" : "text-gray-300"}`}
+                          onClick={() => handleSort("production_date", true)}
+                        />
+                        <IoMdArrowDropdown
+                          className={`hover:text-blue-600 transition-colors ${sortConfig.key === "production_date" && sortConfig.direction === "desc" ? "text-blue-600" : "text-gray-300"}`}
+                          onClick={() => handleSort("production_date", false)}
+                        />
+                      </div>
+                    </div>
+                  </th>
                   <Th>Shift</Th>
                   <th className="px-2 py-2.5 text-left text-[12px] font-bold text-gray-600 uppercase tracking-wide leading-tight">
                     <div className="flex items-center gap-1">
