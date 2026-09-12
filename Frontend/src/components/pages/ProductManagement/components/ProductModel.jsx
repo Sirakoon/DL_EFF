@@ -1,7 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { HiCheck, HiExclamationCircle } from "react-icons/hi2";
 import { TbLoader2 } from "react-icons/tb";
-import { createProduct, updateProduct, getAllProductGroups } from "../../../../services/api";
+import {
+  createProduct,
+  updateProduct,
+  getAllProductGroups,
+} from "../../../../services/api";
 import { toast } from "../../../../lib/toast";
 import { Field, TInput, TSelect, SectionHead } from "../../../shared/FormKit";
 
@@ -37,6 +41,7 @@ export default function ProductModal({ mode, initialData, onClose, onSaved }) {
         product_description: initialData.product_description ?? "",
         capacity_pcs_hr: initialData.capacity_pcs_hr ?? "",
         mc_speed_pcs_hr: initialData.mc_speed_pcs_hr ?? "",
+        product_people: initialData.product_people ?? "",
         is_active: initialData.is_active ?? 1,
       });
     }
@@ -121,7 +126,10 @@ export default function ProductModal({ mode, initialData, onClose, onSaved }) {
                   >
                     <option value="">Select Product Group</option>
                     {groups.map((g) => (
-                      <option key={g.product_group_id} value={g.product_group_id}>
+                      <option
+                        key={g.product_group_id}
+                        value={g.product_group_id}
+                      >
                         {g.product_group_name}
                       </option>
                     ))}
@@ -150,20 +158,43 @@ export default function ProductModal({ mode, initialData, onClose, onSaved }) {
                     hasError={!!errors.capacity_pcs_hr}
                   />
                 </Field>
-                <Field
-                  label="MC Speed"
-                  hint="Pcs/hr · Auto machine"
-                  error={errors.mc_speed_pcs_hr}
+                {form.product_group_id == 7 ? (
+                  <Field
+                    label="People"
+                    hint="People Use Manual machine"
+                    error={errors.product_people}
+                  >
+                    <TInput
+                      type="number"
+                      value={form.product_people}
+                      onChange={set("product_people")}
+                      step="0.01"
+                      min={0}
+                      hasError={!!errors.product_people}
+                    />
+                  </Field>
+                ) : (
+                  null
+                )}
+
+                <div
+                  className={`${form.product_group_id == 7 ? "col-span-2" : "col-span-1"}`}
                 >
-                  <TInput
-                    type="number"
-                    value={form.mc_speed_pcs_hr}
-                    onChange={set("mc_speed_pcs_hr")}
-                    step="0.01"
-                    min={0}
-                    hasError={!!errors.mc_speed_pcs_hr}
-                  />
-                </Field>
+                  <Field
+                    label="MC Speed"
+                    hint="Pcs/hr · Auto machine"
+                    error={errors.mc_speed_pcs_hr}
+                  >
+                    <TInput
+                      type="number"
+                      value={form.mc_speed_pcs_hr}
+                      onChange={set("mc_speed_pcs_hr")}
+                      step="0.01"
+                      min={0}
+                      hasError={!!errors.mc_speed_pcs_hr}
+                    />
+                  </Field>
+                </div>
                 {isEdit && (
                   <div className="col-span-2">
                     <Field label="Status" required>
