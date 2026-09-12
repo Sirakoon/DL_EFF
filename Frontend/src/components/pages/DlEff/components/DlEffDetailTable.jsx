@@ -28,8 +28,7 @@ const MONTHS = [
 const fmtDate = (iso) => {
   if (!iso) return "—";
   const [y, m, d] = iso.slice(0, 10).split("-");
-  const timePart = iso.slice(11, 16); 
-  return `${d} ${MONTHS[+m - 1]} ${y} ${timePart}`;
+  return `${d} ${MONTHS[+m - 1]} ${y}`;
 };
 const num = (v, dec = 2) =>
   v != null

@@ -33,6 +33,13 @@ function validateBody(body) {
     }
   }
 
+  if (body.product_people != null && body.product_people !== '') {
+    const value = Number(body.product_people);
+    if (isNaN(value) || value < 0) {
+      errors.push('product_people must be a positive number');
+    }
+  }
+
   if (
     body.is_active != null &&
     ![0, 1, true, false].includes(body.is_active)
@@ -61,6 +68,7 @@ const getAllProducts = async (req, res, next) => {
         pg.product_group_name,
         p.capacity_pcs_hr,
         p.mc_speed_pcs_hr,
+        p.product_people,
         p.is_active,
         p.updated_at
       FROM dim_product p
@@ -99,6 +107,7 @@ const getProductById = async (req, res, next) => {
           pg.product_group_name,
           p.capacity_pcs_hr,
           p.mc_speed_pcs_hr,
+          p.product_people,
           p.is_active,
           p.updated_at
         FROM dim_product p
@@ -142,6 +151,7 @@ const createProduct = async (req, res, next) => {
       product_description = null,
       capacity_pcs_hr = null,
       mc_speed_pcs_hr = null,
+      product_people = null,
       is_active,
     } = req.body;
 
@@ -168,6 +178,7 @@ const createProduct = async (req, res, next) => {
       .input('product_description', sql.VarChar(200), product_description || null)
       .input('capacity_pcs_hr', sql.Decimal(10, 2), capacity_pcs_hr === '' ? null : capacity_pcs_hr)
       .input('mc_speed_pcs_hr', sql.Decimal(10, 2), mc_speed_pcs_hr === '' ? null : mc_speed_pcs_hr)
+      .input('product_people', sql.Decimal(10, 2), product_people === '' ? null : product_people)
       .input('is_active', sql.Bit, is_active)
       .query(`
         INSERT INTO dim_product (
@@ -176,6 +187,7 @@ const createProduct = async (req, res, next) => {
           product_description,
           capacity_pcs_hr,
           mc_speed_pcs_hr,
+          product_people,
           is_active,
           updated_at
         )
@@ -186,6 +198,7 @@ const createProduct = async (req, res, next) => {
           @product_description,
           @capacity_pcs_hr,
           @mc_speed_pcs_hr,
+          @product_people,
           @is_active,
           SYSUTCDATETIME()
         )
@@ -226,6 +239,7 @@ const updateProduct = async (req, res, next) => {
       product_description = null,
       capacity_pcs_hr = null,
       mc_speed_pcs_hr = null,
+      product_people = null,
       is_active,
     } = req.body;
 
@@ -254,6 +268,7 @@ const updateProduct = async (req, res, next) => {
       .input('product_description', sql.VarChar(200), product_description || null)
       .input('capacity_pcs_hr', sql.Decimal(10, 2), capacity_pcs_hr === '' ? null : capacity_pcs_hr)
       .input('mc_speed_pcs_hr', sql.Decimal(10, 2), mc_speed_pcs_hr === '' ? null : mc_speed_pcs_hr)
+      .input('product_people', sql.Decimal(10, 2), product_people === '' ? null : product_people)
       .input('is_active', sql.Bit, is_active)
       .query(`
         UPDATE dim_product
@@ -263,6 +278,7 @@ const updateProduct = async (req, res, next) => {
           product_description = @product_description,
           capacity_pcs_hr = @capacity_pcs_hr,
           mc_speed_pcs_hr = @mc_speed_pcs_hr,
+          product_people = @product_people,
           is_active = @is_active,
           updated_at = SYSUTCDATETIME()
         WHERE product_id = @id

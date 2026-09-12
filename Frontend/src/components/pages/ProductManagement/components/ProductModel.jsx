@@ -15,6 +15,7 @@ const getEmptyForm = () => ({
   product_description: "",
   capacity_pcs_hr: "",
   mc_speed_pcs_hr: "",
+  product_people: "",
   is_active: 1,
 });
 
@@ -64,6 +65,7 @@ export default function ProductModal({ mode, initialData, onClose, onSaved }) {
     };
     rng("capacity_pcs_hr", 0);
     rng("mc_speed_pcs_hr", 0);
+    rng("product_people", 0);
     setErrors(e);
     return Object.keys(e).length === 0;
   };
